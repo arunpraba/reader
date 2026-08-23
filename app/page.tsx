@@ -153,13 +153,13 @@ export default function Home() {
   return (
     <main className="library-shell">
       <aside className="library-sidebar">
-        <a className="brand" href="/">
+        <Link className="brand" href="/">
           <span className="brand-mark">M</span>
           <span>
             <strong>Margin</strong>
             <small>Reading workspace</small>
           </span>
-        </a>
+        </Link>
         <button className="nav-item active" onClick={() => setSelected("all")}>
           <span>⌂</span> Home
         </button>

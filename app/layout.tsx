@@ -13,13 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   title: "Margin — Immersive Markdown Reader",
   description:
     "Read, listen, repeat, and revisit your saved Markdown documents.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: `${basePath}/favicon.svg`,
+    shortcut: `${basePath}/favicon.svg`,
   },
 };
 
@@ -31,7 +33,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="stylesheet" href="/reader-highlights.css" />
+        <link rel="stylesheet" href={`${basePath}/katex-fonts.css`} />
+        <link rel="stylesheet" href={`${basePath}/reader-highlights.css`} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
