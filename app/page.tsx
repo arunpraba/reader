@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { strToU8, zipSync } from "fflate";
 import { Doc, Folder, storage } from "../lib/storage";
 
@@ -17,6 +19,7 @@ async function loadLibrary() {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [selected, setSelected] = useState<string | null | "all">("all");
@@ -91,7 +94,7 @@ export default function Home() {
       updatedAt: Date.now(),
     };
     await storage.save(doc);
-    window.location.href = `/reader?id=${doc.id}&edit=1`;
+    router.push(`/reader?id=${doc.id}&edit=1`);
   };
   const importFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,7 +109,7 @@ export default function Home() {
         updatedAt: Date.now(),
       };
       await storage.save(doc);
-      window.location.href = `/reader?id=${doc.id}`;
+      router.push(`/reader?id=${doc.id}`);
     };
     reader.readAsText(file);
   };
@@ -275,7 +278,7 @@ export default function Home() {
           </div>
           <div className="doc-grid">
             {visible.map((doc) => (
-              <a
+              <Link
                 href={`/reader?id=${doc.id}`}
                 className="doc-card"
                 key={doc.id}
@@ -297,7 +300,7 @@ export default function Home() {
                     })}
                   </time>
                 </footer>
-              </a>
+              </Link>
             ))}
             <button className="doc-card new-card" onClick={createDoc}>
               <span>＋</span>

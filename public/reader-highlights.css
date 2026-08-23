@@ -1,0 +1,12 @@
+.reader-paper ::highlight(margin-paragraph) {
+  background: var(--highlight-paragraph);
+  color: var(--highlight-paragraph-text);
+}
+.reader-paper ::highlight(margin-sentence) {
+  background: var(--highlight-sentence);
+  color: var(--highlight-sentence-text);
+}
+.reader-paper ::highlight(margin-word) {
+  background: var(--highlight-word);
+  color: var(--highlight-word-text);
+}

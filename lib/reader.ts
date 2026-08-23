@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
+import { splitSentences } from "./split-sentences";
 
 export type HighlightLevels = {
   word: boolean;
@@ -25,12 +26,9 @@ export type Block = {
 };
 
 const SCRIPT_LANGUAGES: Array<{ pattern: RegExp; language: string }> = [
-  // East Asian — kana/hangul before shared Han ideographs
   { pattern: /[\u3040-\u30FF\u31F0-\u31FF]/u, language: "ja-JP" },
   { pattern: /[\uAC00-\uD7AF\u1100-\u11FF]/u, language: "ko-KR" },
   { pattern: /[\u4E00-\u9FFF\u3400-\u4DBF]/u, language: "zh-CN" },
-
-  // South Asian
   { pattern: /[\u0B80-\u0BFF]/u, language: "ta-IN" },
   { pattern: /[\u0C00-\u0C7F]/u, language: "te-IN" },
   { pattern: /[\u0C80-\u0CFF]/u, language: "kn-IN" },
@@ -41,25 +39,17 @@ const SCRIPT_LANGUAGES: Array<{ pattern: RegExp; language: string }> = [
   { pattern: /[\u0B00-\u0B7F]/u, language: "or-IN" },
   { pattern: /[\u0D80-\u0DFF]/u, language: "si-LK" },
   { pattern: /[\u0900-\u097F]/u, language: "hi-IN" },
-
-  // Southeast Asian
   { pattern: /[\u0E00-\u0E7F]/u, language: "th-TH" },
   { pattern: /[\u0E80-\u0EFF]/u, language: "lo-LA" },
   { pattern: /[\u1780-\u17FF]/u, language: "km-KH" },
   { pattern: /[\u1000-\u109F]/u, language: "my-MM" },
-
-  // Middle East / Africa
   { pattern: /[\u0590-\u05FF]/u, language: "he-IL" },
   { pattern: /[\u0600-\u06FF\u0750-\u077F]/u, language: "ar-SA" },
   { pattern: /[\u1200-\u137F]/u, language: "am-ET" },
-
-  // European non-Latin
   { pattern: /[\u0370-\u03FF\u1F00-\u1FFF]/u, language: "el-GR" },
   { pattern: /[\u0530-\u058F]/u, language: "hy-AM" },
   { pattern: /[\u10A0-\u10FF]/u, language: "ka-GE" },
   { pattern: /[\u0400-\u04FF]/u, language: "ru-RU" },
-
-  // Other major scripts
   { pattern: /[\u0F00-\u0FFF]/u, language: "bo-CN" },
   { pattern: /[\u1800-\u18AF]/u, language: "mn-MN" },
 ];
@@ -143,13 +133,22 @@ export function parseMarkdown(content: string): Block[] {
         .trim();
       const sentenceTexts =
         type === "h1" || type === "h2" || type === "table"
-          ? [text]
-          : (text.match(/[^.!?।]+[.!?।]+|[^.!?।]+$/g) ?? [text])
-              .map((part) => part.trim())
-              .filter(Boolean);
+          ? text
+            ? [text]
+            : []
+          : type === "list"
+            ? (node.children ?? [])
+                .map((item) =>
+                  toString(item as never)
+                    .replace(/\s+/g, " ")
+                    .trim(),
+                )
+                .filter(Boolean)
+                .flatMap((item) => splitSentences(item))
+            : splitSentences(text);
       return {
         type,
-        text,
+        text: type === "list" ? sentenceTexts.join(" ") : text,
         sentences: sentenceTexts.map(
           (sentence) =>
             sentence.match(/[\p{L}\p{M}\p{N}'’-]+|[^\s\p{L}\p{M}\p{N}]/gu) ??

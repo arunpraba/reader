@@ -19,9 +19,10 @@ Open http://localhost:3000
 
 - `npm run dev`: start local development
 - `npm run build`: production build
-- `npm test`: build and verify rendered loading skeleton
+- `npm run start`: start production server
+- `npm test`: run production build
 - `npm run lint`: run ESLint
 
 ## Learn More
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
+- [Next.js Documentation](https://nextjs.org/docs)
