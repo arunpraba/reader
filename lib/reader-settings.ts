@@ -28,7 +28,7 @@ export type ReaderSettings = {
 };
 
 export const defaultReaderSettings: ReaderSettings = {
-  levels: { word: true, sentence: false, paragraph: false },
+  levels: { word: true, sentence: true, paragraph: false },
   highlightColors: {
     word: "#e6b54f",
     sentence: "#f2d78f",
