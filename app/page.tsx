@@ -1,10 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { strToU8, zipSync } from "fflate";
 import { Doc, Folder, storage } from "../lib/storage";
+import {
+  fetchImportFromUrl,
+  ImportUrlError,
+  isImportUrl,
+} from "../lib/import-url";
+import {
+  loadSelectedFolder,
+  loadSidebarCollapsed,
+  saveSelectedFolder,
+  saveSidebarCollapsed,
+} from "../lib/reader-settings";
 
 async function loadLibrary() {
   await storage.seed();
@@ -20,17 +31,43 @@ async function loadLibrary() {
 
 export default function Home() {
   const router = useRouter();
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const savingFolderRef = useRef(false);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [selected, setSelected] = useState<string | null | "all">("all");
+  const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolder, setNewFolder] = useState("");
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 720px)").matches
+      : false,
+  );
   const [search, setSearch] = useState("");
+  const [importLink, setImportLink] = useState("");
+  const [importingLink, setImportingLink] = useState(false);
+  const [importLinkError, setImportLinkError] = useState("");
+  const [folderSelectionReady, setFolderSelectionReady] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarReady, setSidebarReady] = useState(false);
 
-  const refresh = async () => {
-    const library = await loadLibrary();
-    setFolders(library.folders);
-    setDocs(library.docs);
-  };
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 720px)");
+    const sync = () => setIsMobile(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    setSidebarCollapsed(loadSidebarCollapsed());
+    setSidebarReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarReady) return;
+    saveSidebarCollapsed(sidebarCollapsed);
+  }, [sidebarCollapsed, sidebarReady]);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,11 +75,31 @@ export default function Home() {
       if (cancelled) return;
       setFolders(library.folders);
       setDocs(library.docs);
+      const saved = loadSelectedFolder();
+      if (
+        saved === "all" ||
+        saved === null ||
+        library.folders.some((folder) => folder.id === saved)
+      ) {
+        setSelected(saved);
+      }
+      setFolderSelectionReady(true);
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!folderSelectionReady) return;
+    saveSelectedFolder(selected);
+  }, [selected, folderSelectionReady]);
+
+  useEffect(() => {
+    if (!creatingFolder) return;
+    folderInputRef.current?.focus();
+    folderInputRef.current?.select();
+  }, [creatingFolder, isMobile]);
 
   const visible = useMemo(() => {
     const terms = search
@@ -79,12 +136,65 @@ export default function Home() {
       .map((item) => item.doc);
   }, [docs, folders, selected, search]);
 
-  const createFolder = async () => {
-    if (!newFolder.trim()) return;
-    await storage.folder(newFolder.trim());
+  const cancelFolderCreate = () => {
+    savingFolderRef.current = false;
+    setCreatingFolder(false);
     setNewFolder("");
-    await refresh();
   };
+  const startFolderCreate = () => {
+    savingFolderRef.current = false;
+    setNewFolder("");
+    setCreatingFolder(true);
+  };
+  const createFolder = async () => {
+    const name = newFolder.trim();
+    if (!name) {
+      cancelFolderCreate();
+      return;
+    }
+    if (savingFolderRef.current) return;
+    savingFolderRef.current = true;
+    try {
+      const folder = await storage.folder(name);
+      setFolders((current) =>
+        [...current, folder].sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      setSelected(folder.id);
+      cancelFolderCreate();
+    } catch {
+      savingFolderRef.current = false;
+    }
+  };
+  const folderCompose = creatingFolder ? (
+    <form
+      className={isMobile ? "folder-chip-compose" : "folder-compose"}
+      onSubmit={(event) => {
+        event.preventDefault();
+        void createFolder();
+      }}
+    >
+      {!isMobile && <span>▰</span>}
+      <input
+        ref={folderInputRef}
+        value={newFolder}
+        onChange={(event) => setNewFolder(event.target.value)}
+        onBlur={() => {
+          requestAnimationFrame(() => {
+            if (!folderInputRef.current) return;
+            void createFolder();
+          });
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            cancelFolderCreate();
+          }
+        }}
+        placeholder="Folder name"
+        aria-label="New folder name"
+      />
+    </form>
+  ) : null;
   const createDoc = async () => {
     const doc: Doc = {
       id: crypto.randomUUID(),
@@ -96,22 +206,57 @@ export default function Home() {
     await storage.save(doc);
     router.push(`/reader?id=${doc.id}&edit=1`);
   };
+  const saveImportedDoc = async (title: string, content: string) => {
+    const doc: Doc = {
+      id: crypto.randomUUID(),
+      folderId: selected === "all" ? null : selected,
+      title: title.trim() || "Untitled",
+      content,
+      updatedAt: Date.now(),
+    };
+    await storage.save(doc);
+    router.push(`/reader?id=${doc.id}`);
+  };
   const importFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async () => {
-      const doc: Doc = {
-        id: crypto.randomUUID(),
-        folderId: selected === "all" ? null : selected,
-        title: file.name.replace(/\.(md|markdown|txt)$/i, ""),
-        content: String(reader.result ?? ""),
-        updatedAt: Date.now(),
-      };
-      await storage.save(doc);
-      router.push(`/reader?id=${doc.id}`);
+      await saveImportedDoc(
+        file.name.replace(/\.(md|markdown|txt)$/i, ""),
+        String(reader.result ?? ""),
+      );
     };
     reader.readAsText(file);
+    event.target.value = "";
+  };
+  const importFromLink = async (rawLink: string) => {
+    const link = rawLink.trim();
+    if (!link) return;
+    setImportLinkError("");
+    setImportingLink(true);
+    try {
+      const imported = await fetchImportFromUrl(link);
+      setImportLink("");
+      await saveImportedDoc(imported.title, imported.content);
+    } catch (error) {
+      setImportLinkError(
+        error instanceof ImportUrlError
+          ? error.message
+          : "Could not import this link",
+      );
+    } finally {
+      setImportingLink(false);
+    }
+  };
+  const handleImportLinkPaste = (
+    event: React.ClipboardEvent<HTMLInputElement>,
+  ) => {
+    const pasted = event.clipboardData.getData("text").trim();
+    if (!isImportUrl(pasted)) return;
+    event.preventDefault();
+    setImportLink(pasted);
+    void importFromLink(pasted);
   };
   const exportLibrary = () => {
     const safe = (name: string) =>
@@ -151,49 +296,67 @@ export default function Home() {
   };
 
   return (
-    <main className="library-shell">
-      <aside className="library-sidebar">
-        <Link className="brand" href="/">
-          <span className="brand-mark">M</span>
-          <span>
-            <strong>Margin</strong>
-            <small>Reading workspace</small>
-          </span>
-        </Link>
-        <button className="nav-item active" onClick={() => setSelected("all")}>
-          <span>⌂</span> Home
+    <main
+      className={`library-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
+    >
+      <aside className="library-sidebar" aria-label="Library sidebar">
+        <div className="sidebar-top">
+          <Link className="brand" href="/">
+            <span className="brand-mark">M</span>
+            <span className="brand-copy">
+              <strong>Margin</strong>
+              <small>Reading workspace</small>
+            </span>
+          </Link>
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={() => setSidebarCollapsed((value) => !value)}
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!sidebarCollapsed}
+          >
+            {sidebarCollapsed ? "›" : "‹"}
+          </button>
+        </div>
+        <button
+          className={`nav-item ${selected === "all" ? "active" : ""}`}
+          onClick={() => setSelected("all")}
+          title="All pages"
+        >
+          <span>⌂</span> <span className="nav-item-label">All pages</span>
         </button>
-        <div className="nav-label">Folders</div>
+        <div className="nav-label">
+          <span className="nav-label-text">Folders</span>
+          <button
+            type="button"
+            className="folder-add"
+            onClick={startFolderCreate}
+            aria-label="Create folder"
+            title="Create folder"
+          >
+            ＋
+          </button>
+        </div>
         <nav aria-label="Folders">
           {folders.map((folder) => (
             <button
               key={folder.id}
               className={`nav-item ${selected === folder.id ? "active" : ""}`}
               onClick={() => setSelected(folder.id)}
+              title={folder.name}
             >
               <span>▰</span>
-              {folder.name}
+              <span className="nav-item-label">{folder.name}</span>
               <small>
                 {docs.filter((doc) => doc.folderId === folder.id).length}
               </small>
             </button>
           ))}
+          {!isMobile && folderCompose}
         </nav>
-        <form
-          className="folder-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            createFolder();
-          }}
-        >
-          <input
-            value={newFolder}
-            onChange={(e) => setNewFolder(e.target.value)}
-            placeholder="New folder"
-            aria-label="New folder name"
-          />
-          <button aria-label="Create folder">＋</button>
-        </form>
         <div className="local-note">
           <span>●</span>
           <div>
@@ -245,11 +408,49 @@ export default function Home() {
           <div className="welcome">
             <span className="eyebrow">Your reading space</span>
             <h1>
-              Where ideas wait
+              Write, organize,
               <br />
-              to be heard.
+              and listen.
             </h1>
-            <p>Organize, write, and listen to every page at your own pace.</p>
+            <p>
+              Create a page, drop it in a folder, then tap play to hear it read
+              aloud.
+            </p>
+          </div>
+          <div className="folder-rail" aria-label="Folders">
+            <div className="folder-rail-head">
+              <strong>Folders</strong>
+              <button
+                type="button"
+                className="folder-rail-add"
+                onClick={startFolderCreate}
+              >
+                ＋ New folder
+              </button>
+            </div>
+            <div className="folder-chips">
+              <button
+                type="button"
+                className={`folder-chip ${selected === "all" ? "active" : ""}`}
+                onClick={() => setSelected("all")}
+              >
+                All pages
+              </button>
+              {folders.map((folder) => (
+                <button
+                  type="button"
+                  key={folder.id}
+                  className={`folder-chip ${selected === folder.id ? "active" : ""}`}
+                  onClick={() => setSelected(folder.id)}
+                >
+                  {folder.name}
+                  <small>
+                    {docs.filter((doc) => doc.folderId === folder.id).length}
+                  </small>
+                </button>
+              ))}
+              {isMobile && folderCompose}
+            </div>
           </div>
           <div className="section-head">
             <div>
@@ -263,17 +464,54 @@ export default function Home() {
               <p>
                 {visible.length} {visible.length === 1 ? "page" : "pages"}
                 {search ? " across titles, text, and folders" : ""}
+                {!search && selected === "all"
+                  ? " · New pages land here until you file them"
+                  : ""}
               </p>
             </div>
-            <div className="root-import">
-              <label>
-                ⇧ Import at this level
+            <div className="import-actions">
+              <form
+                className="link-import"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void importFromLink(importLink);
+                }}
+              >
                 <input
-                  type="file"
-                  accept=".md,.markdown,.txt"
-                  onChange={importFile}
+                  type="url"
+                  inputMode="url"
+                  placeholder="Paste a link to add a page…"
+                  aria-label="Paste a link to add a page"
+                  value={importLink}
+                  disabled={importingLink}
+                  onChange={(event) => {
+                    setImportLink(event.target.value);
+                    if (importLinkError) setImportLinkError("");
+                  }}
+                  onPaste={handleImportLinkPaste}
                 />
-              </label>
+                <button
+                  type="submit"
+                  disabled={importingLink || !importLink.trim()}
+                >
+                  {importingLink ? "Adding…" : "Add link"}
+                </button>
+              </form>
+              {importLinkError && (
+                <p className="import-link-error" role="alert">
+                  {importLinkError}
+                </p>
+              )}
+              <div className="root-import">
+                <label>
+                  ⇧ Import a markdown file
+                  <input
+                    type="file"
+                    accept=".md,.markdown,.txt"
+                    onChange={importFile}
+                  />
+                </label>
+              </div>
             </div>
           </div>
           <div className="doc-grid">
@@ -291,7 +529,7 @@ export default function Home() {
                 <footer>
                   <span>
                     {folders.find((folder) => folder.id === doc.folderId)
-                      ?.name ?? "Root"}
+                      ?.name ?? "Unfiled"}
                   </span>
                   <time>
                     {new Date(doc.updatedAt).toLocaleDateString(undefined, {
@@ -305,7 +543,7 @@ export default function Home() {
             <button className="doc-card new-card" onClick={createDoc}>
               <span>＋</span>
               <strong>New page</strong>
-              <small>Start with a blank thought</small>
+              <small>Opens the editor so you can write, then listen</small>
             </button>
           </div>
         </div>

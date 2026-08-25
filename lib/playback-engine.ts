@@ -1,4 +1,5 @@
 import { detectLanguage, type Word } from "./reader";
+import { startSpeechKeepAlive, stopSpeechKeepAlive } from "./speech-keepalive";
 
 export type PlaybackSettings = {
   wpm: number;
@@ -24,8 +25,6 @@ export type PlaybackSnapshot = {
   progress: number;
   active: Word | null;
 };
-
-type Listener = () => void;
 
 const defaultSettings: PlaybackSettings = {
   wpm: 150,
@@ -61,10 +60,21 @@ function createPlaybackEngine() {
 
   let intentionalCancel = false;
 
+  const mediaSession = () => ({
+    title: doc?.title ?? "Reading",
+    onPlay: () => {
+      if (!playing) void play(Math.max(0, activeIndex()));
+    },
+    onPause: () => {
+      if (playing) stop(false);
+    },
+  });
+
   const stop = (clearActive = true) => {
     intentionalCancel = true;
     runId += 1;
     if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+    stopSpeechKeepAlive();
     playing = false;
     if (clearActive) active = null;
     emit();
@@ -100,21 +110,53 @@ function createPlaybackEngine() {
   const isInterruptError = (error: string) =>
     error === "interrupted" || error === "canceled";
 
+  const speakUtterance = (
+    utterance: SpeechSynthesisUtterance,
+    id: number,
+    onEnd: () => void,
+  ) =>
+    new Promise<"end" | "retry">((resolve) => {
+      intentionalCancel = false;
+      let settled = false;
+      let started = false;
+      let resumeTimer = 0;
+      const finish = (value: "end" | "retry") => {
+        if (settled) return;
+        settled = true;
+        window.clearInterval(resumeTimer);
+        resolve(value);
+      };
+      utterance.onstart = () => {
+        started = true;
+      };
+      utterance.onend = () => {
+        onEnd();
+        finish("end");
+      };
+      utterance.onerror = (event) => {
+        if (intentionalCancel || id !== runId) finish("end");
+        else if (isInterruptError(event.error)) finish("retry");
+        else finish("end");
+      };
+      resumeTimer = window.setInterval(() => {
+        if (id !== runId) {
+          finish("end");
+          return;
+        }
+        if (typeof speechSynthesis === "undefined") return;
+        if (speechSynthesis.paused) speechSynthesis.resume();
+        if (started && !speechSynthesis.speaking && !speechSynthesis.pending)
+          finish("retry");
+      }, 1500);
+      speechSynthesis.speak(utterance);
+    });
+
   const speakWord = async (word: Word, id: number) => {
     for (;;) {
       if (id !== runId) return;
-      const result = await new Promise<"end" | "retry">((resolve) => {
-        intentionalCancel = false;
-        const utterance = new SpeechSynthesisUtterance(word.text);
-        configureUtterance(utterance, detectLanguage(word.text));
-        utterance.onend = () => resolve("end");
-        utterance.onerror = (event) => {
-          if (intentionalCancel || id !== runId) resolve("end");
-          else if (isInterruptError(event.error)) resolve("retry");
-          else resolve("end");
-        };
-        speechSynthesis.speak(utterance);
-      });
+      const utterance = new SpeechSynthesisUtterance(word.text);
+      configureUtterance(utterance, detectLanguage(word.text));
+      const result = await speakUtterance(utterance, id, () => undefined);
       if (result === "end" || id !== runId) return;
       await wait(0.12, id);
     }
@@ -130,31 +172,21 @@ function createPlaybackEngine() {
         starts.push(cursor);
         cursor += word.text.length + 1;
       });
-      const result = await new Promise<"end" | "retry">((resolve) => {
-        intentionalCancel = false;
-        const utterance = new SpeechSynthesisUtterance(text);
-        configureUtterance(utterance, run[0].language);
-        active = run[0];
+      const utterance = new SpeechSynthesisUtterance(text);
+      configureUtterance(utterance, run[0].language);
+      active = run[0];
+      emit();
+      utterance.onboundary = (event) => {
+        let index = 0;
+        starts.forEach((start, item) => {
+          if (start <= event.charIndex) index = item;
+        });
+        active = run[index];
         emit();
-        utterance.onboundary = (event) => {
-          let index = 0;
-          starts.forEach((start, item) => {
-            if (start <= event.charIndex) index = item;
-          });
-          active = run[index];
-          emit();
-        };
-        utterance.onend = () => {
-          active = run.at(-1) ?? null;
-          emit();
-          resolve("end");
-        };
-        utterance.onerror = (event) => {
-          if (intentionalCancel || id !== runId) resolve("end");
-          else if (isInterruptError(event.error)) resolve("retry");
-          else resolve("end");
-        };
-        speechSynthesis.speak(utterance);
+      };
+      const result = await speakUtterance(utterance, id, () => {
+        active = run.at(-1) ?? null;
+        emit();
       });
       if (result === "end" || id !== runId) return;
       await wait(0.12, id);
@@ -189,6 +221,7 @@ function createPlaybackEngine() {
     const id = ++runId;
     playing = true;
     progress = normalizedStart / words.length;
+    startSpeechKeepAlive(mediaSession());
     emit();
     const remainingWords = words.slice(normalizedStart);
     const paragraphs = remainingWords.reduce<Word[][]>((groups, word) => {
@@ -258,6 +291,7 @@ function createPlaybackEngine() {
     if (id === runId) {
       playing = false;
       progress = 1;
+      stopSpeechKeepAlive();
       emit();
     }
   };

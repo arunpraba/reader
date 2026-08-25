@@ -69,8 +69,12 @@ export default function ReaderPage() {
   const [paragraphRepeats, setParagraphRepeats] = useState(
     defaultReaderSettings.paragraphRepeats,
   );
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(
+    defaultReaderSettings.settingsOpen,
+  );
+  const [minimized, setMinimized] = useState(
+    defaultReaderSettings.playerMinimized,
+  );
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [preferredVoice, setPreferredVoice] = useState(
@@ -90,7 +94,6 @@ export default function ReaderPage() {
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("id");
     setEditing(new URLSearchParams(location.search).get("edit") === "1");
-    setMinimized(localStorage.getItem("margin-player-minimized") === "true");
     if (id)
       storage.doc(id).then((value) => {
         positionRef.current = value?.readingPosition;
@@ -114,6 +117,8 @@ export default function ReaderPage() {
     setFontSize(saved.fontSize);
     setLineHeight(saved.lineHeight);
     setLetterSpacing(saved.letterSpacing);
+    setSettingsOpen(saved.settingsOpen);
+    setMinimized(saved.playerMinimized);
     setSettingsReady(true);
   }, []);
 
@@ -134,6 +139,8 @@ export default function ReaderPage() {
       fontSize,
       lineHeight,
       letterSpacing,
+      settingsOpen,
+      playerMinimized: minimized,
     };
     saveReaderSettings(settings);
   }, [
@@ -152,6 +159,8 @@ export default function ReaderPage() {
     fontSize,
     lineHeight,
     letterSpacing,
+    settingsOpen,
+    minimized,
   ]);
   const blocks = useMemo(
     () => parseMarkdown(doc?.content ?? ""),
@@ -365,7 +374,6 @@ export default function ReaderPage() {
       const index = target ? words.indexOf(target) : -1;
       if (index >= 0) {
         setMinimized(true);
-        localStorage.setItem("margin-player-minimized", "true");
         play(index);
       }
     },
@@ -373,7 +381,6 @@ export default function ReaderPage() {
   );
   const jump = (unit: "sentence" | "paragraph", direction: -1 | 1) => {
     setMinimized(true);
-    localStorage.setItem("margin-player-minimized", "true");
     jumpPlayback(unit, direction);
   };
   const seekToRatio = (ratio: number, resume = true) => {
@@ -383,7 +390,6 @@ export default function ReaderPage() {
   };
   const setPlayerMinimized = (value: boolean) => {
     setMinimized(value);
-    localStorage.setItem("margin-player-minimized", String(value));
     if (!value) setSettingsOpen(true);
   };
   const setHighlightColor = (level: keyof HighlightLevels, color: string) => {
@@ -453,9 +459,9 @@ export default function ReaderPage() {
           <button
             className="mobile-settings"
             onClick={() => setSettingsOpen(true)}
-            aria-label="Open reading settings"
+            aria-label="Open listen settings"
           >
-            ☷
+            Listen
           </button>
         </div>
       </header>
@@ -497,32 +503,43 @@ export default function ReaderPage() {
             className={`reader-controls ${settingsOpen ? "open" : ""}`}
             aria-label="Reading settings"
           >
-            <button
-              className="close-settings"
-              onClick={() => setSettingsOpen(false)}
-              aria-label="Close reading settings"
-            >
-              ×
-            </button>
-            <button
-              className="minimize-player"
-              onClick={() => setPlayerMinimized(true)}
-              aria-label="Minimize player"
-              title="Minimize player"
-            >
-              —
-            </button>
-            <div className="control-kicker">Listen & focus</div>
-            <h2>Reading controls</h2>
+            <header className="controls-header">
+              <div>
+                <div className="control-kicker">Listen while you read</div>
+                <h2>Player & settings</h2>
+              </div>
+              <div className="controls-header-actions">
+                <button
+                  type="button"
+                  className="minimize-player"
+                  onClick={() => setPlayerMinimized(true)}
+                  aria-label="Minimize to floating player"
+                  title="Minimize to floating player"
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  className="close-settings"
+                  onClick={() => setSettingsOpen(false)}
+                  aria-label="Close settings"
+                  title="Close settings"
+                >
+                  ×
+                </button>
+              </div>
+            </header>
             <div className="estimate-card">
-              <span>Approx. complete time</span>
+              <span>Estimated listen time</span>
               <strong>{formatDuration(estimate)}</strong>
-              <small>{words.length} words · includes all configured gaps</small>
+              <small>
+                {words.length} words · based on your speed and pauses
+              </small>
             </div>
             <label className="voice-control">
               <span>
-                <b>Preferred voice</b>
-                <small>Saved globally on this device</small>
+                <b>Voice</b>
+                <small>Used when speaking this page</small>
               </span>
               <select
                 value={preferredVoice}
@@ -536,13 +553,12 @@ export default function ReaderPage() {
                 ))}
               </select>
               <small>
-                Language detection overrides this choice whenever the text
-                changes language.
+                Auto switches language when the text language changes.
               </small>
             </label>
             <div className="settings-section">
               <h3>Highlighter</h3>
-              <p>Choose an accessible colour, then turn on any combination.</p>
+              <p>Pick colours, then turn on word, sentence, or paragraph.</p>
               {(["word", "sentence", "paragraph"] as const).map((level) => (
                 <ToggleRow
                   key={level}

@@ -62,12 +62,15 @@ async function put<T>(storeName: "folders" | "docs", value: T) {
 export const storage = {
   folders: () => all<Folder>("folders"),
   docs: () => all<Doc>("docs"),
-  folder: (name: string) =>
-    put("folders", {
+  async folder(name: string) {
+    const folder: Folder = {
       id: crypto.randomUUID(),
       name,
       createdAt: Date.now(),
-    } satisfies Folder),
+    };
+    await put("folders", folder);
+    return folder;
+  },
   save: (doc: Doc) => put("docs", doc),
   async doc(id: string) {
     return (await all<Doc>("docs")).find((doc) => doc.id === id);

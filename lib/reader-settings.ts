@@ -23,6 +23,8 @@ export type ReaderSettings = {
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
+  settingsOpen: boolean;
+  playerMinimized: boolean;
 };
 
 export const defaultReaderSettings: ReaderSettings = {
@@ -44,9 +46,12 @@ export const defaultReaderSettings: ReaderSettings = {
   fontSize: 21,
   lineHeight: 1.85,
   letterSpacing: 0,
+  settingsOpen: false,
+  playerMinimized: false,
 };
 
 const SETTINGS_KEY = "margin-reader-settings";
+const SELECTED_FOLDER_KEY = "margin-selected-folder";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -56,6 +61,12 @@ function readLegacySettings(): Partial<ReaderSettings> {
   const next: Partial<ReaderSettings> = {};
   const voice = localStorage.getItem("margin-preferred-voice");
   if (voice !== null) next.preferredVoice = voice;
+
+  const minimized = localStorage.getItem("margin-player-minimized");
+  if (minimized !== null) next.playerMinimized = minimized === "true";
+
+  const settingsOpen = localStorage.getItem("margin-settings-open");
+  if (settingsOpen !== null) next.settingsOpen = settingsOpen === "true";
 
   try {
     const colors = localStorage.getItem("margin-highlight-colors");
@@ -105,6 +116,8 @@ export function loadReaderSettings(): ReaderSettings {
         ...defaultReaderSettings.pauseEnabled,
         ...(isRecord(merged.pauseEnabled) ? merged.pauseEnabled : {}),
       },
+      settingsOpen: Boolean(merged.settingsOpen),
+      playerMinimized: Boolean(merged.playerMinimized),
     } as ReaderSettings;
   } catch {
     return {
@@ -118,6 +131,11 @@ export function saveReaderSettings(settings: ReaderSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   localStorage.setItem("margin-preferred-voice", settings.preferredVoice);
   localStorage.setItem(
+    "margin-player-minimized",
+    String(settings.playerMinimized),
+  );
+  localStorage.setItem("margin-settings-open", String(settings.settingsOpen));
+  localStorage.setItem(
     "margin-highlight-colors",
     JSON.stringify(settings.highlightColors),
   );
@@ -129,4 +147,30 @@ export function saveReaderSettings(settings: ReaderSettings) {
       letterSpacing: settings.letterSpacing,
     }),
   );
+}
+
+export function loadSelectedFolder(): string | null | "all" {
+  if (typeof window === "undefined") return "all";
+  const raw = localStorage.getItem(SELECTED_FOLDER_KEY);
+  if (raw === null || raw === "all") return "all";
+  if (raw === "null") return null;
+  return raw;
+}
+
+export function saveSelectedFolder(selected: string | null | "all") {
+  localStorage.setItem(
+    SELECTED_FOLDER_KEY,
+    selected === null ? "null" : selected,
+  );
+}
+
+const SIDEBAR_COLLAPSED_KEY = "margin-sidebar-collapsed";
+
+export function loadSidebarCollapsed() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+}
+
+export function saveSidebarCollapsed(collapsed: boolean) {
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
 }
