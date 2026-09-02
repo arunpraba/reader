@@ -978,6 +978,29 @@ a {
   line-height: var(--reader-line-height, 1.5);
   letter-spacing: var(--reader-letter-spacing, 0em);
 }
+.markdown-doc.markdown-body ul {
+  list-style: disc;
+}
+.markdown-doc.markdown-body ol {
+  list-style: decimal;
+}
+.markdown-doc.markdown-body ul ul,
+.markdown-doc.markdown-body ol ul {
+  list-style: circle;
+}
+.markdown-doc.markdown-body ul ol,
+.markdown-doc.markdown-body ol ol {
+  list-style: lower-roman;
+}
+.markdown-doc.markdown-body ul ul ol,
+.markdown-doc.markdown-body ul ol ol,
+.markdown-doc.markdown-body ol ul ol,
+.markdown-doc.markdown-body ol ol ol {
+  list-style: lower-alpha;
+}
+.markdown-doc.markdown-body li {
+  display: list-item;
+}
 .reader-highlight {
   background: var(--highlight);
   box-shadow: 0 0 0 4px var(--highlight);

@@ -111,10 +111,18 @@ export function useReaderPlayback({
 
   const startAt = useCallback(
     (blockIndex: number, wordOrdinal: number) => {
-      const blockWords = words.filter((word) => word.blockIndex === blockIndex);
-      const target =
-        blockWords[Math.min(blockWords.length - 1, Math.max(0, wordOrdinal))];
-      const index = target ? words.indexOf(target) : -1;
+      let index = -1;
+      let seen = 0;
+      for (let i = 0; i < words.length; i++) {
+        if (words[i].blockIndex !== blockIndex) continue;
+        if (seen === wordOrdinal) {
+          index = i;
+          break;
+        }
+        seen += 1;
+      }
+      if (index < 0 && seen > 0)
+        index = words.findLastIndex((word) => word.blockIndex === blockIndex);
       if (index >= 0) {
         setMinimized(true);
         play(index);

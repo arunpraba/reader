@@ -213,6 +213,7 @@ function createPlaybackEngine() {
     playing = true;
     paused = false;
     progress = normalizedStart / words.length;
+    active = words[normalizedStart];
     activateMediaPlayer(mediaHandlers(), {
       silentLoop: settings.ttsEngine === "browser",
       resumeSpeech: settings.ttsEngine === "browser",

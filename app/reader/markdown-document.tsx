@@ -1,10 +1,17 @@
 "use client";
 
-import { memo, useCallback, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  memo,
+  useCallback,
+  useRef,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { readPositionFromPoint } from "../../lib/read-position";
 import { markdownComponents } from "./markdown-components";
 import { rehypeReadingBlocks } from "../../lib/rehype-reading-blocks";
 
@@ -18,32 +25,53 @@ export const MarkdownDocument = memo(function MarkdownDocument({
   content: string;
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
-  const handleDoubleClick = useCallback(
-    (event: ReactMouseEvent<HTMLDivElement>) => {
-      const target = event.target as HTMLElement;
-      const block = target.closest<HTMLElement>("[data-read-block]");
+  const lastTapRef = useRef({ time: 0, x: 0, y: 0 });
+
+  const startAtPoint = useCallback(
+    (clientX: number, clientY: number, target: EventTarget | null) => {
+      const element = target instanceof HTMLElement ? target : null;
+      const block = element?.closest<HTMLElement>("[data-read-block]");
       if (!block) return;
 
-      const selection = window.getSelection();
-      if (!selection?.anchorNode || !block.contains(selection.anchorNode))
-        return;
+      const ordinal = readPositionFromPoint(block, clientX, clientY);
+      if (ordinal == null) return;
 
-      const range = document.createRange();
-      range.selectNodeContents(block);
-      range.setEnd(selection.anchorNode, selection.anchorOffset);
-      const ordinal = Math.max(
-        0,
-        (range.toString().match(/[\p{L}\p{M}\p{N}'’-]+/gu) ?? []).length - 1,
-      );
       onStartAt(Number(block.dataset.readBlock), ordinal);
     },
     [onStartAt],
+  );
+
+  const handleDoubleClick = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      startAtPoint(event.clientX, event.clientY, event.target);
+    },
+    [startAtPoint],
+  );
+
+  const handlePointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.pointerType === "mouse") return;
+      const now = Date.now();
+      const last = lastTapRef.current;
+      const isDoubleTap =
+        now - last.time < 350 &&
+        Math.hypot(event.clientX - last.x, event.clientY - last.y) < 28;
+      lastTapRef.current = {
+        time: now,
+        x: event.clientX,
+        y: event.clientY,
+      };
+      if (!isDoubleTap) return;
+      startAtPoint(event.clientX, event.clientY, event.target);
+    },
+    [startAtPoint],
   );
 
   return (
     <div
       className="markdown-doc markdown-body"
       onDoubleClick={handleDoubleClick}
+      onPointerUp={handlePointerUp}
       title="Double-click text to read from that position"
     >
       <ReactMarkdown
