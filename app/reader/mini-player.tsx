@@ -1,6 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 export function MiniPlayer({
   progress,
@@ -13,7 +14,13 @@ export function MiniPlayer({
   onExpand: () => void;
   onTogglePlay: () => void;
 }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const player = (
     <div
       className="mini-player"
       style={
@@ -43,4 +50,7 @@ export function MiniPlayer({
       </span>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(player, document.body);
 }

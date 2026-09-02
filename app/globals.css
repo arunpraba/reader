@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
+@import "github-markdown-css/github-markdown-light.css";
 .reader-layout.player-minimized {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -30,7 +31,10 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  flex-shrink: 0;
+  padding: 25px 25px 16px;
+  background: #f8f5ed;
+  border-bottom: 1px solid var(--line);
 }
 .controls-header h2 {
   font:
@@ -49,8 +53,9 @@
   --player-progress: 0deg;
   position: fixed;
   z-index: 50;
-  right: 24px;
-  bottom: 24px;
+  right: max(24px, env(safe-area-inset-right, 0px));
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  left: auto;
   width: 76px;
   height: 76px;
   border-radius: 50%;
@@ -58,6 +63,7 @@
   place-items: center;
   background: conic-gradient(var(--accent) var(--player-progress), #d9d4c9 0);
   box-shadow: 0 14px 35px #302c2445;
+  pointer-events: auto;
 }
 .mini-player:before {
   content: "";
@@ -104,76 +110,13 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
-.rich-markdown table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 30px 0;
-  font:
-    15px/1.5 Arial,
-    sans-serif;
-  display: block;
-  overflow-x: auto;
-}
-.rich-markdown th,
-.rich-markdown td {
-  border: 1px solid var(--line);
-  padding: 10px 13px;
-  text-align: left;
-  min-width: 120px;
-}
-.rich-markdown th {
-  background: #efede7;
-  font-weight: 700;
-}
-.rich-markdown pre {
-  overflow: auto;
-  background: #242722;
-  color: #f4f1e8;
-  padding: 18px;
-  border-radius: 8px;
-  font:
-    13px/1.6 ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-.rich-markdown :not(pre) > code {
-  background: #ece8df;
-  padding: 2px 5px;
-  border-radius: 4px;
-  font:
-    85% ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-.rich-markdown blockquote {
-  border-left: 4px solid var(--accent);
-  margin: 30px 0;
-  padding: 4px 0 4px 22px;
-  color: #68635a;
-}
-.rich-markdown img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-.rich-markdown a {
-  color: #1f6654;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.rich-markdown input[type="checkbox"] {
-  accent-color: var(--green);
-  margin-right: 8px;
-}
 .mermaid-diagram {
   overflow: auto;
-  margin: 32px 0;
-  padding: 18px;
-  background: #fbfaf6;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  margin: 16px 0;
+  padding: 16px;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
 }
 .mermaid-diagram svg {
   max-width: 100%;
@@ -591,6 +534,86 @@ a {
   margin-left: auto;
   color: #a9bcb6;
 }
+.nav-item-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+.nav-item-row .nav-item {
+  flex: 1;
+  min-width: 0;
+}
+.item-delete {
+  flex: none;
+  width: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  font-size: 18px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.nav-item-row .item-delete {
+  color: #a9bcb6;
+}
+.nav-item-row:hover .item-delete,
+.nav-item-row .item-delete:hover {
+  opacity: 1;
+  background: #3f6459;
+  color: #fff;
+}
+.folder-chip-wrap {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  max-width: 100%;
+}
+.folder-chip-wrap .folder-chip {
+  min-width: 0;
+}
+.folder-chip-delete {
+  width: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: #8a857c;
+  font-size: 16px;
+}
+.folder-chip-delete:hover {
+  opacity: 1;
+  color: #b94b38;
+  border-color: #d9a8a0;
+  background: #fff5f3;
+}
+.doc-card-shell {
+  position: relative;
+}
+.doc-card-shell .doc-card {
+  height: 100%;
+}
+.doc-card-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: #8a857c;
+  font-size: 16px;
+}
+.doc-card-delete:hover {
+  opacity: 1;
+  color: #b94b38;
+  border-color: #d9a8a0;
+  background: #fff5f3;
+}
 .folder-compose {
   display: flex;
   align-items: center;
@@ -879,6 +902,7 @@ a {
 }
 .reader-shell {
   min-height: 100dvh;
+  overflow-x: clip;
 }
 .reader-topbar {
   position: sticky;
@@ -897,11 +921,16 @@ a {
 .back-link {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   align-self: stretch;
   margin-left: -12px;
   padding: 0 20px 0 12px;
   font-size: 12px;
   color: #5f5a52;
+}
+.back-link-icon {
+  font-size: 22px;
+  line-height: 1;
 }
 .reader-title {
   border: 0;
@@ -933,56 +962,21 @@ a {
   margin: auto;
 }
 .reader-paper {
-  background: var(--paper);
-  border: 1px solid var(--line);
+  background: #ffffff;
+  border: 1px solid #d0d7de;
   min-height: calc(100dvh - 106px);
-  padding: clamp(48px, 8vw, 110px);
-  box-shadow: 0 18px 50px #5a554b14;
-  --reader-font-size: 21px;
-  --reader-line-height: 1.85;
-  --reader-letter-spacing: 0em;
+  padding: 32px 40px;
+  box-shadow: none;
 }
 .markdown-doc {
-  max-width: 720px;
-  margin: auto;
-  font-size: var(--reader-font-size);
-  line-height: var(--reader-line-height);
-  letter-spacing: var(--reader-letter-spacing);
+  max-width: 980px;
+  margin: 0 auto;
+  background-color: transparent;
 }
-.markdown-doc h1 {
-  font:
-    500 clamp(44px, 6vw, 72px)/1.04 Georgia,
-    serif;
-  letter-spacing: -0.04em;
-  margin: 0 0 56px;
-}
-.markdown-doc h2 {
-  font:
-    600 28px Georgia,
-    serif;
-  margin: 52px 0 22px;
-}
-.markdown-doc p,
-.markdown-doc .list-block,
-.markdown-doc li {
-  font-family: Georgia, serif;
-  font-size: var(--reader-font-size);
-  line-height: var(--reader-line-height);
-  letter-spacing: var(--reader-letter-spacing);
-  color: #38352f;
-  margin: 0 0 31px;
-}
-.markdown-doc li {
-  margin: 0 0 0.4em;
-}
-.list-block {
-  padding-left: 28px;
-  position: relative;
-}
-.list-block:before {
-  content: "•";
-  position: absolute;
-  left: 5px;
+.reader-paper .markdown-doc.markdown-body {
+  font-size: var(--reader-font-size, 1rem);
+  line-height: var(--reader-line-height, 1.5);
+  letter-spacing: var(--reader-letter-spacing, 0em);
 }
 .reader-highlight {
   background: var(--highlight);
@@ -1009,20 +1003,28 @@ a {
   background: transparent;
   outline: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--reader-font-size);
-  line-height: var(--reader-line-height);
-  letter-spacing: var(--reader-letter-spacing);
-  color: #35332e;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: #1f2328;
 }
 .reader-controls {
   position: sticky;
   top: 106px;
   background: #f8f5ed;
   border: 1px solid var(--line);
-  padding: 25px;
   align-self: start;
   max-height: calc(100dvh - 122px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.controls-scroll {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+  padding: 16px 25px 25px;
 }
 .reader-controls h2 {
   font:
@@ -1293,9 +1295,16 @@ a {
   .reader-topbar {
     grid-template-columns: auto 1fr auto;
   }
-  .auto-language,
-  .reader-actions > .secondary-button {
+  .auto-language {
     display: none;
+  }
+  .reader-actions > .secondary-button:not(.reader-edit-button) {
+    display: none;
+  }
+  .reader-edit-button {
+    display: inline-flex;
+    padding: 8px 11px;
+    font-size: 12px;
   }
 }
 @media (max-width: 720px) {
@@ -1434,7 +1443,7 @@ a {
     margin-left: -8px;
     padding: 0 16px 0 8px;
   }
-  .back-link span {
+  .back-link span:not(.back-link-icon) {
     display: none;
   }
   .reader-title {
@@ -1454,17 +1463,19 @@ a {
   .reader-paper {
     border: 0;
     min-height: calc(100dvh - 64px);
-    padding: 48px 25px;
-  }
-  .markdown-doc h1 {
-    font-size: 43px;
-    margin-bottom: 40px;
+    padding: 24px 16px;
   }
   .notion-editor {
     min-height: calc(100dvh - 160px);
   }
   .reader-controls {
-    padding: 25px 20px calc(25px + env(safe-area-inset-bottom));
+    padding: 0;
+  }
+  .controls-header {
+    padding: 25px 20px 16px;
+  }
+  .controls-scroll {
+    padding: 16px 20px calc(25px + env(safe-area-inset-bottom));
   }
 }
 @media (max-width: 390px) {
@@ -1482,13 +1493,15 @@ a {
     font-size: 39px;
   }
   .reader-paper {
-    padding-inline: 20px;
-  }
-  .markdown-doc h1 {
-    font-size: 38px;
+    padding-inline: 16px;
   }
   .mini-player {
-    right: 16px;
-    bottom: 16px;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
+}
+
+body.capacitor-native {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }

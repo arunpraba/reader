@@ -1,29 +1,15 @@
 "use client";
 
 import { memo, useCallback, type MouseEvent as ReactMouseEvent } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { markdownComponents } from "./markdown-components";
 import { rehypeReadingBlocks } from "../../lib/rehype-reading-blocks";
-import { MermaidDiagram } from "./mermaid-diagram";
 
 const remarkPlugins = [remarkGfm, remarkMath];
 const rehypePlugins = [rehypeKatex, rehypeReadingBlocks];
-
-const markdownComponents: Components = {
-  code({ className, children, ...props }) {
-    const match = /language-(\w+)/.exec(className ?? "");
-    if (match?.[1] === "mermaid") {
-      return <MermaidDiagram source={String(children).replace(/\n$/, "")} />;
-    }
-    return (
-      <code className={className} {...props}>
-        {children}
-      </code>
-    );
-  },
-};
 
 export const MarkdownDocument = memo(function MarkdownDocument({
   content,
@@ -56,7 +42,7 @@ export const MarkdownDocument = memo(function MarkdownDocument({
 
   return (
     <div
-      className="markdown-doc rich-markdown"
+      className="markdown-doc markdown-body"
       onDoubleClick={handleDoubleClick}
       title="Double-click text to read from that position"
     >

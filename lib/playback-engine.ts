@@ -1,5 +1,13 @@
-import { detectLanguage, type Word } from "./reader";
-import { startSpeechKeepAlive, stopSpeechKeepAlive } from "./speech-keepalive";
+import {
+  activate as activateMediaPlayer,
+  deactivate as deactivateMediaPlayer,
+  setPlaybackState,
+  updatePosition,
+} from "./media-player";
+import { createBrowserProvider } from "./tts/browser-provider";
+import { createEdgeProvider } from "./tts/edge-provider";
+import type { TtsSpeakContext } from "./tts/types";
+import type { Word } from "./reader";
 
 export type PlaybackSettings = {
   wpm: number;
@@ -11,6 +19,8 @@ export type PlaybackSettings = {
   sentenceRepeats: number;
   paragraphRepeats: number;
   preferredVoice: string;
+  ttsEngine: "browser" | "edge";
+  preferredEdgeVoice: string;
 };
 
 export type PlaybackDocument = {
@@ -36,11 +46,21 @@ const defaultSettings: PlaybackSettings = {
   sentenceRepeats: 1,
   paragraphRepeats: 1,
   preferredVoice: "",
+  ttsEngine: "browser",
+  preferredEdgeVoice: "",
 };
 
+function estimateDuration(wordCount: number, wpm: number) {
+  if (wordCount <= 0 || wpm <= 0) return 0;
+  return (wordCount / wpm) * 60;
+}
+
 function createPlaybackEngine() {
+  const browserProvider = createBrowserProvider();
+  const edgeProvider = createEdgeProvider();
   let doc: PlaybackDocument | null = null;
   let playing = false;
+  let paused = false;
   let progress = 0;
   let active: Word | null = null;
   let runId = 0;
@@ -53,153 +73,8 @@ function createPlaybackEngine() {
   };
   const listeners = new Set<() => void>();
 
-  const emit = () => {
-    cached = { doc, playing, progress, active };
-    listeners.forEach((listener) => listener());
-  };
-
-  let intentionalCancel = false;
-
-  const mediaSession = () => ({
-    title: doc?.title ?? "Reading",
-    onPlay: () => {
-      if (!playing) void play(Math.max(0, activeIndex()));
-    },
-    onPause: () => {
-      if (playing) stop(false);
-    },
-  });
-
-  const stop = (clearActive = true) => {
-    intentionalCancel = true;
-    runId += 1;
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
-    stopSpeechKeepAlive();
-    playing = false;
-    if (clearActive) active = null;
-    emit();
-  };
-
-  const configureUtterance = (
-    utterance: SpeechSynthesisUtterance,
-    language: string,
-  ) => {
-    utterance.lang = language;
-    utterance.rate = Math.min(10, Math.max(0.1, settings.wpm / 150));
-    const available = speechSynthesis.getVoices();
-    const preferred = available.find(
-      (voice) =>
-        voice.voiceURI === settings.preferredVoice &&
-        voice.lang
-          .toLowerCase()
-          .startsWith(utterance.lang.slice(0, 2).toLowerCase()),
-    );
-    utterance.voice =
-      preferred ??
-      available.find(
-        (voice) => voice.lang.toLowerCase() === utterance.lang.toLowerCase(),
-      ) ??
-      available.find((voice) =>
-        voice.lang
-          .toLowerCase()
-          .startsWith(utterance.lang.slice(0, 2).toLowerCase()),
-      ) ??
-      null;
-  };
-
-  const isInterruptError = (error: string) =>
-    error === "interrupted" || error === "canceled";
-
-  const speakUtterance = (
-    utterance: SpeechSynthesisUtterance,
-    id: number,
-    onEnd: () => void,
-  ) =>
-    new Promise<"end" | "retry">((resolve) => {
-      intentionalCancel = false;
-      let settled = false;
-      let started = false;
-      let resumeTimer = 0;
-      const finish = (value: "end" | "retry") => {
-        if (settled) return;
-        settled = true;
-        window.clearInterval(resumeTimer);
-        resolve(value);
-      };
-      utterance.onstart = () => {
-        started = true;
-      };
-      utterance.onend = () => {
-        onEnd();
-        finish("end");
-      };
-      utterance.onerror = (event) => {
-        if (intentionalCancel || id !== runId) finish("end");
-        else if (isInterruptError(event.error)) finish("retry");
-        else finish("end");
-      };
-      resumeTimer = window.setInterval(() => {
-        if (id !== runId) {
-          finish("end");
-          return;
-        }
-        if (typeof speechSynthesis === "undefined") return;
-        if (speechSynthesis.paused) speechSynthesis.resume();
-        if (started && !speechSynthesis.speaking && !speechSynthesis.pending)
-          finish("retry");
-      }, 1500);
-      speechSynthesis.speak(utterance);
-    });
-
-  const speakWord = async (word: Word, id: number) => {
-    for (;;) {
-      if (id !== runId) return;
-      const utterance = new SpeechSynthesisUtterance(word.text);
-      configureUtterance(utterance, detectLanguage(word.text));
-      const result = await speakUtterance(utterance, id, () => undefined);
-      if (result === "end" || id !== runId) return;
-      await wait(0.12, id);
-    }
-  };
-
-  const speakRun = async (run: Word[], id: number) => {
-    for (;;) {
-      if (id !== runId) return;
-      const text = run.map((word) => word.text).join(" ");
-      const starts: number[] = [];
-      let cursor = 0;
-      run.forEach((word) => {
-        starts.push(cursor);
-        cursor += word.text.length + 1;
-      });
-      const utterance = new SpeechSynthesisUtterance(text);
-      configureUtterance(utterance, run[0].language);
-      active = run[0];
-      emit();
-      utterance.onboundary = (event) => {
-        let index = 0;
-        starts.forEach((start, item) => {
-          if (start <= event.charIndex) index = item;
-        });
-        active = run[index];
-        emit();
-      };
-      const result = await speakUtterance(utterance, id, () => {
-        active = run.at(-1) ?? null;
-        emit();
-      });
-      if (result === "end" || id !== runId) return;
-      await wait(0.12, id);
-    }
-  };
-
-  const wait = (seconds: number, id: number) =>
-    new Promise<void>((resolve) => {
-      setTimeout(() => {
-        if (id === runId) resolve();
-        else resolve();
-      }, seconds * 1000);
-    });
+  const getProvider = () =>
+    settings.ttsEngine === "edge" ? edgeProvider : browserProvider;
 
   const activeIndex = () => {
     const words = doc?.words ?? [];
@@ -213,15 +88,135 @@ function createPlaybackEngine() {
     );
   };
 
+  const getMediaProgress = () => {
+    const words = doc?.words ?? [];
+    const duration = estimateDuration(words.length, settings.wpm);
+    const index = activeIndex();
+    const position = words.length ? (index / words.length) * duration : 0;
+    return { position, duration, playbackRate: settings.wpm / 150 };
+  };
+
+  const syncMediaPosition = () => {
+    if (!playing && !paused) return;
+    updatePosition(getMediaProgress());
+  };
+
+  const emit = () => {
+    cached = { doc, playing, progress, active };
+    syncMediaPosition();
+    listeners.forEach((listener) => listener());
+  };
+
+  let intentionalCancel = false;
+
+  const speakContext = (id: number): TtsSpeakContext => ({
+    runId: id,
+    isActive: () => id === runId,
+    markIntentionalCancel: () => {
+      intentionalCancel = true;
+    },
+    isIntentionalCancel: () => intentionalCancel,
+  });
+
+  const mediaHandlers = () => ({
+    title: doc?.title ?? "Reading",
+    onPlay: () => {
+      if (paused) resume();
+      else if (!playing) void play(Math.max(0, activeIndex()));
+    },
+    onPause: () => {
+      if (playing) pause();
+    },
+    onPrevious: () => jump("paragraph", -1),
+    onNext: () => jump("paragraph", 1),
+    onSeek: (ratio: number) => {
+      seekToRatio(ratio, playing || paused);
+    },
+    getProgress: getMediaProgress,
+  });
+
+  const stop = (clearActive = true) => {
+    intentionalCancel = true;
+    runId += 1;
+    paused = false;
+    browserProvider.cancel();
+    edgeProvider.cancel();
+    deactivateMediaPlayer();
+    playing = false;
+    if (clearActive) active = null;
+    emit();
+  };
+
+  const pause = () => {
+    if (!playing || paused) return;
+    paused = true;
+    playing = false;
+    getProvider().pause?.();
+    setPlaybackState("paused");
+    emit();
+  };
+
+  const resume = () => {
+    if (!paused) return;
+    paused = false;
+    playing = true;
+    getProvider().resume?.();
+    setPlaybackState("playing");
+    emit();
+  };
+
+  const wait = (seconds: number, id: number) =>
+    new Promise<void>((resolve) => {
+      let remaining = seconds * 1000;
+      const step = () => {
+        if (id !== runId) {
+          resolve();
+          return;
+        }
+        if (paused) {
+          window.setTimeout(step, 100);
+          return;
+        }
+        if (remaining <= 0) {
+          resolve();
+          return;
+        }
+        const chunk = Math.min(100, remaining);
+        window.setTimeout(() => {
+          remaining -= chunk;
+          step();
+        }, chunk);
+      };
+      step();
+    });
+
+  const speakWord = async (word: Word, id: number) => {
+    const ctx = speakContext(id);
+    await getProvider().speakWord(word, settings, ctx);
+  };
+
+  const speakRun = async (run: Word[], id: number) => {
+    const ctx = speakContext(id);
+    await getProvider().speakRun(run, settings, ctx, (word) => {
+      active = word;
+      emit();
+    });
+  };
+
   const play = async (startIndex = 0) => {
     const words = doc?.words ?? [];
     if (!words.length) return;
     const normalizedStart = Math.min(words.length - 1, Math.max(0, startIndex));
     stop(false);
     const id = ++runId;
+    intentionalCancel = false;
     playing = true;
+    paused = false;
     progress = normalizedStart / words.length;
-    startSpeechKeepAlive(mediaSession());
+    activateMediaPlayer(mediaHandlers(), {
+      silentLoop: settings.ttsEngine === "browser",
+      resumeSpeech: settings.ttsEngine === "browser",
+    });
     emit();
     const remainingWords = words.slice(normalizedStart);
     const paragraphs = remainingWords.reduce<Word[][]>((groups, word) => {
@@ -290,10 +285,60 @@ function createPlaybackEngine() {
       }
     if (id === runId) {
       playing = false;
+      paused = false;
       progress = 1;
-      stopSpeechKeepAlive();
+      deactivateMediaPlayer();
       emit();
     }
+  };
+
+  const jump = (unit: "sentence" | "paragraph", direction: -1 | 1) => {
+    const words = doc?.words ?? [];
+    if (!words.length) return;
+    const starts = words.reduce<number[]>((items, word, index) => {
+      const previous = words[index - 1];
+      if (
+        !previous ||
+        (unit === "paragraph"
+          ? previous.blockIndex !== word.blockIndex
+          : previous.blockIndex !== word.blockIndex ||
+            previous.sentenceIndex !== word.sentenceIndex)
+      )
+        items.push(index);
+      return items;
+    }, []);
+    const current = activeIndex();
+    let group = Math.max(
+      0,
+      starts.findIndex(
+        (start, index) =>
+          start <= current && (starts[index + 1] ?? Infinity) > current,
+      ),
+    );
+    group = Math.min(starts.length - 1, Math.max(0, group + direction));
+    const target = starts[group] ?? 0;
+    const resumePlayback = playing || paused;
+    stop(false);
+    active = words[target];
+    progress = target / Math.max(1, words.length);
+    emit();
+    if (resumePlayback) queueMicrotask(() => void play(target));
+  };
+
+  const seekToRatio = (ratio: number, resumePlayback = true) => {
+    const words = doc?.words ?? [];
+    if (!words.length) return 0;
+    const target = Math.min(
+      words.length - 1,
+      Math.max(0, Math.round(ratio * (words.length - 1))),
+    );
+    const shouldResume = resumePlayback && (playing || paused);
+    stop(false);
+    active = words[target];
+    progress = target / Math.max(1, words.length);
+    emit();
+    if (shouldResume) queueMicrotask(() => void play(target));
+    return target;
   };
 
   return {
@@ -320,58 +365,16 @@ function createPlaybackEngine() {
       settings = next;
     },
     play,
+    pause,
+    resume,
     stop,
     togglePlay() {
-      if (playing) stop(false);
+      if (paused) resume();
+      else if (playing) pause();
       else void play(Math.max(0, activeIndex()));
     },
-    jump(unit: "sentence" | "paragraph", direction: -1 | 1) {
-      const words = doc?.words ?? [];
-      if (!words.length) return;
-      const starts = words.reduce<number[]>((items, word, index) => {
-        const previous = words[index - 1];
-        if (
-          !previous ||
-          (unit === "paragraph"
-            ? previous.blockIndex !== word.blockIndex
-            : previous.blockIndex !== word.blockIndex ||
-              previous.sentenceIndex !== word.sentenceIndex)
-        )
-          items.push(index);
-        return items;
-      }, []);
-      const current = activeIndex();
-      let group = Math.max(
-        0,
-        starts.findIndex(
-          (start, index) =>
-            start <= current && (starts[index + 1] ?? Infinity) > current,
-        ),
-      );
-      group = Math.min(starts.length - 1, Math.max(0, group + direction));
-      const target = starts[group] ?? 0;
-      const resume = playing;
-      stop(false);
-      active = words[target];
-      progress = target / Math.max(1, words.length);
-      emit();
-      if (resume) queueMicrotask(() => void play(target));
-    },
-    seekToRatio(ratio: number, resume = true) {
-      const words = doc?.words ?? [];
-      if (!words.length) return 0;
-      const target = Math.min(
-        words.length - 1,
-        Math.max(0, Math.round(ratio * (words.length - 1))),
-      );
-      const shouldResume = resume && playing;
-      stop(false);
-      active = words[target];
-      progress = target / Math.max(1, words.length);
-      emit();
-      if (shouldResume) queueMicrotask(() => void play(target));
-      return target;
-    },
+    jump,
+    seekToRatio,
     activeIndex,
   };
 }

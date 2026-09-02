@@ -2,6 +2,8 @@
 
 Local markdown library and immersive reading app.
 
+> **Note:** This project is built for learning purposes only.
+
 ## Prerequisites
 
 - Node.js `>=22.13.0`

@@ -59,6 +59,18 @@ async function put<T>(storeName: "folders" | "docs", value: T) {
   });
 }
 
+async function remove(storeName: "folders" | "docs", id: string) {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const request = db
+      .transaction(storeName, "readwrite")
+      .objectStore(storeName)
+      .delete(id);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export const storage = {
   folders: () => all<Folder>("folders"),
   docs: () => all<Doc>("docs"),
@@ -72,6 +84,16 @@ export const storage = {
     return folder;
   },
   save: (doc: Doc) => put("docs", doc),
+  deleteDoc: (id: string) => remove("docs", id),
+  async deleteFolder(id: string) {
+    const docs = await all<Doc>("docs");
+    await Promise.all(
+      docs
+        .filter((doc) => doc.folderId === id)
+        .map((doc) => put("docs", { ...doc, folderId: null })),
+    );
+    await remove("folders", id);
+  },
   async doc(id: string) {
     return (await all<Doc>("docs")).find((doc) => doc.id === id);
   },

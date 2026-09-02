@@ -86,6 +86,19 @@ export function detectLanguage(text: string) {
   return "en-US";
 }
 
+function isNumericToken(text: string) {
+  return /^[\p{N}]+([.,][\p{N}]+)*%?$/u.test(text);
+}
+
+function resolveNumericLanguage(prev?: Word, next?: Word) {
+  const prevLang = prev?.language;
+  const nextLang = next?.language;
+  if (prevLang && prevLang === nextLang) return prevLang;
+  if (prevLang && prevLang !== "en-US") return prevLang;
+  if (nextLang && nextLang !== "en-US") return nextLang;
+  return prevLang ?? nextLang ?? "en-US";
+}
+
 export function parseMarkdown(content: string): Block[] {
   const tree = unified()
     .use(remarkParse)
@@ -183,6 +196,10 @@ export function flattenWords(blocks: Block[]): Word[] {
       }),
     ),
   );
+  words.forEach((word, index) => {
+    if (!isNumericToken(word.text)) return;
+    word.language = resolveNumericLanguage(words[index - 1], words[index + 1]);
+  });
   return words;
 }
 

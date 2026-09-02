@@ -20,6 +20,8 @@ export type ReaderSettings = {
   sentenceRepeats: number;
   paragraphRepeats: number;
   preferredVoice: string;
+  ttsEngine: "browser" | "edge";
+  preferredEdgeVoice: string;
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
@@ -43,8 +45,10 @@ export const defaultReaderSettings: ReaderSettings = {
   sentenceRepeats: 1,
   paragraphRepeats: 1,
   preferredVoice: "",
-  fontSize: 21,
-  lineHeight: 1.85,
+  ttsEngine: "browser",
+  preferredEdgeVoice: "",
+  fontSize: 1,
+  lineHeight: 1.5,
   letterSpacing: 0,
   settingsOpen: false,
   playerMinimized: false,
@@ -52,6 +56,11 @@ export const defaultReaderSettings: ReaderSettings = {
 
 const SETTINGS_KEY = "margin-reader-settings";
 const SELECTED_FOLDER_KEY = "margin-selected-folder";
+
+function normalizeFontSizeRem(value: number) {
+  if (value > 4) return Math.round((value / 16) * 8) / 8;
+  return value;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -61,6 +70,13 @@ function readLegacySettings(): Partial<ReaderSettings> {
   const next: Partial<ReaderSettings> = {};
   const voice = localStorage.getItem("margin-preferred-voice");
   if (voice !== null) next.preferredVoice = voice;
+
+  const ttsEngine = localStorage.getItem("margin-tts-engine");
+  if (ttsEngine === "browser" || ttsEngine === "edge")
+    next.ttsEngine = ttsEngine;
+
+  const edgeVoice = localStorage.getItem("margin-preferred-edge-voice");
+  if (edgeVoice !== null) next.preferredEdgeVoice = edgeVoice;
 
   const minimized = localStorage.getItem("margin-player-minimized");
   if (minimized !== null) next.playerMinimized = minimized === "true";
@@ -118,6 +134,24 @@ export function loadReaderSettings(): ReaderSettings {
       },
       settingsOpen: Boolean(merged.settingsOpen),
       playerMinimized: Boolean(merged.playerMinimized),
+      fontSize: normalizeFontSizeRem(Number(merged.fontSize)),
+      lineHeight:
+        typeof merged.lineHeight === "number"
+          ? merged.lineHeight
+          : defaultReaderSettings.lineHeight,
+      letterSpacing:
+        typeof merged.letterSpacing === "number"
+          ? merged.letterSpacing
+          : defaultReaderSettings.letterSpacing,
+      ttsEngine: merged.ttsEngine === "edge" ? "edge" : "browser",
+      preferredEdgeVoice:
+        typeof merged.preferredEdgeVoice === "string"
+          ? merged.preferredEdgeVoice
+          : defaultReaderSettings.preferredEdgeVoice,
+      preferredVoice:
+        typeof merged.preferredVoice === "string"
+          ? merged.preferredVoice
+          : defaultReaderSettings.preferredVoice,
     } as ReaderSettings;
   } catch {
     return {
@@ -130,6 +164,11 @@ export function loadReaderSettings(): ReaderSettings {
 export function saveReaderSettings(settings: ReaderSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   localStorage.setItem("margin-preferred-voice", settings.preferredVoice);
+  localStorage.setItem("margin-tts-engine", settings.ttsEngine);
+  localStorage.setItem(
+    "margin-preferred-edge-voice",
+    settings.preferredEdgeVoice,
+  );
   localStorage.setItem(
     "margin-player-minimized",
     String(settings.playerMinimized),

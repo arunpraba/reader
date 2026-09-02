@@ -17,6 +17,25 @@ export function locateWordSpans(text: string, words: { text: string }[]) {
   return spans;
 }
 
+export function scrollRangeIntoView(
+  range: Range,
+  options: ScrollIntoViewOptions = { behavior: "smooth", block: "center" },
+) {
+  const rect = range.getBoundingClientRect();
+  if (!rect.height && !rect.width) return;
+  const block = options.block ?? "center";
+  let top = window.scrollY + rect.top;
+  if (block === "center") {
+    top = top - window.innerHeight / 2 + rect.height / 2;
+  } else if (block === "end") {
+    top = top - window.innerHeight + rect.height;
+  }
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: options.behavior ?? "smooth",
+  });
+}
+
 export function expandSentenceSpan(text: string, start: number, end: number) {
   let nextStart = start;
   let nextEnd = end;

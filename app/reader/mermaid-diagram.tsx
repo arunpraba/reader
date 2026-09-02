@@ -1,24 +1,7 @@
 "use client";
 
 import { memo, useEffect, useId, useState } from "react";
-
-let mermaidReady: Promise<typeof import("mermaid").default> | null = null;
-
-function loadMermaid() {
-  if (!mermaidReady) {
-    mermaidReady = import("mermaid").then(({ default: mermaid }) => {
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: "strict",
-        theme: "neutral",
-      });
-      return mermaid;
-    });
-  }
-  return mermaidReady;
-}
-
-const svgCache = new Map<string, string>();
+import { loadMermaid, mermaidSvgCache } from "../../lib/mermaid-loader";
 
 export const MermaidDiagram = memo(function MermaidDiagram({
   source,
@@ -28,16 +11,16 @@ export const MermaidDiagram = memo(function MermaidDiagram({
   const reactId = useId().replace(/:/g, "");
   const [svg, setSvg] = useState("");
   const [error, setError] = useState(false);
-  const displaySvg = svgCache.get(source) ?? svg;
+  const displaySvg = mermaidSvgCache.get(source) ?? svg;
 
   useEffect(() => {
-    if (svgCache.has(source)) return;
+    if (mermaidSvgCache.has(source)) return;
 
     let active = true;
     loadMermaid()
       .then(async (mermaid) => {
         const result = await mermaid.render(`mermaid-${reactId}`, source);
-        svgCache.set(source, result.svg);
+        mermaidSvgCache.set(source, result.svg);
         if (active) {
           setSvg(result.svg);
           setError(false);
