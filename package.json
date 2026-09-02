@@ -8,20 +8,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:mobile": "next build",
     "start": "next start",
     "test": "npm run build && node --experimental-strip-types --test lib/*.test.ts",
-    "lint": "eslint . --ignore-pattern .next",
-    "cap:sync": "npm run build:mobile && npx cap sync android",
-    "cap:open": "npx cap open android",
-    "cap:run": "npm run cap:sync && npx cap run android"
+    "lint": "eslint . --ignore-pattern .next"
   },
   "dependencies": {
-    "@capacitor/android": "^8.5.1",
-    "@capacitor/cli": "^8.5.1",
-    "@capacitor/core": "^8.5.1",
-    "@capacitor/splash-screen": "^8.0.2",
-    "@capacitor/status-bar": "^8.0.3",
     "edge-tts-universal": "^1.4.0",
     "fflate": "^0.8.3",
     "github-markdown-css": "^5.9.0",

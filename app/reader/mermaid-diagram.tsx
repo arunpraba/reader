@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useId, useState } from "react";
 import { loadMermaid, mermaidSvgCache } from "../../lib/mermaid-loader";
+import { useTheme } from "../theme-provider";
 
 export const MermaidDiagram = memo(function MermaidDiagram({
   source,
@@ -9,18 +10,24 @@ export const MermaidDiagram = memo(function MermaidDiagram({
   source: string;
 }) {
   const reactId = useId().replace(/:/g, "");
+  const { theme } = useTheme();
+  const cacheKey = `${theme.kind}:${source}`;
   const [svg, setSvg] = useState("");
   const [error, setError] = useState(false);
-  const displaySvg = mermaidSvgCache.get(source) ?? svg;
+  const displaySvg = mermaidSvgCache.get(cacheKey) ?? svg;
 
   useEffect(() => {
-    if (mermaidSvgCache.has(source)) return;
+    if (mermaidSvgCache.has(cacheKey)) {
+      setSvg(mermaidSvgCache.get(cacheKey) ?? "");
+      setError(false);
+      return;
+    }
 
     let active = true;
     loadMermaid()
       .then(async (mermaid) => {
         const result = await mermaid.render(`mermaid-${reactId}`, source);
-        mermaidSvgCache.set(source, result.svg);
+        mermaidSvgCache.set(cacheKey, result.svg);
         if (active) {
           setSvg(result.svg);
           setError(false);
@@ -33,7 +40,7 @@ export const MermaidDiagram = memo(function MermaidDiagram({
     return () => {
       active = false;
     };
-  }, [reactId, source]);
+  }, [cacheKey, reactId, source]);
 
   if (error) {
     return (

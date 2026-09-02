@@ -1,9 +1,4 @@
-import {
-  pauseAudio,
-  playBlob,
-  resumeAudio,
-  stopAudio,
-} from "../media-player";
+import { pauseAudio, playBlob, resumeAudio, stopAudio } from "../media-player";
 import type { PlaybackSettings } from "../playback-engine";
 import type { Word } from "../reader";
 import { loadEdgeTts } from "./load-edge";

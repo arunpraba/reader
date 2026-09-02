@@ -8,16 +8,17 @@ export function useReaderDocument() {
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const searchParams = useSearchParams();
   const positionRef = useRef<Doc["readingPosition"]>(undefined);
+  const docId = searchParams.get("id");
+  const initialEditing = searchParams.get("edit") === "1";
 
   useEffect(() => {
-    const id = searchParams.get("id");
-    setEditing(searchParams.get("edit") === "1");
-    if (id)
-      storage.doc(id).then((value) => {
+    setEditing(initialEditing);
+    if (docId)
+      storage.doc(docId).then((value) => {
         positionRef.current = value?.readingPosition;
         setDoc(value ?? null);
       });
-  }, [searchParams]);
+  }, [docId, initialEditing]);
 
   useEffect(() => {
     if (!doc) return;

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function LibraryTopbar({
   search,
   hasDocs,
@@ -34,23 +36,27 @@ export function LibraryTopbar({
         )}
       </div>
       <div className="top-actions">
+        <Link className="secondary-button top-action-themes" href="/settings">
+          <span className="top-action-label">Themes</span>
+        </Link>
         <button
-          className="secondary-button export-zip-button"
+          className="secondary-button export-zip-button top-action-export"
           onClick={onExport}
           disabled={!hasDocs}
+          aria-label="Export library as ZIP"
         >
-          ↓ Export ZIP
+          <span className="top-action-label">↓ Export ZIP</span>
         </button>
-        <label className="secondary-button library-import-button">
-          Import
+        <label className="secondary-button library-import-button top-action-import">
+          <span className="top-action-label">Import</span>
           <input
             type="file"
             accept=".md,.markdown,.txt"
             onChange={onImportFile}
           />
         </label>
-        <button className="primary-button" onClick={onCreateDoc}>
-          ＋ New page
+        <button className="primary-button top-action-new" onClick={onCreateDoc}>
+          <span className="top-action-label">＋ New page</span>
         </button>
       </div>
     </header>
