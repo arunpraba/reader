@@ -12,8 +12,8 @@ export function RegisterServiceWorker() {
     const register = () => {
       void navigator.serviceWorker
         .register(`${basePath}/sw.js`, { scope: `${basePath}/` })
-        .catch(() => {
-          /* Registration can fail on http://localhost without HTTPS in some browsers; ignore. */
+        .catch((error) => {
+          console.warn("Service worker registration failed:", error);
         });
     };
 

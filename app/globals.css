@@ -1411,6 +1411,31 @@ a {
 .top-more-item input {
   display: none;
 }
+.pwa-install-tip {
+  margin: 4px 0 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--control-bg, var(--input-bg));
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+  display: grid;
+  gap: 8px;
+}
+.pwa-install-tip button {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: var(--accent, var(--ink));
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+.pwa-install-tip-desktop {
+  display: grid;
+  grid-column: 1 / -1;
+}
 .search {
   display: flex;
   align-items: center;
@@ -2412,6 +2437,9 @@ a {
     z-index: 40;
   }
   .top-actions {
+    display: none;
+  }
+  .pwa-install-tip-desktop {
     display: none;
   }
   .search {

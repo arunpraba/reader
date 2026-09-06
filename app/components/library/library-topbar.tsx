@@ -1,13 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import {
   Download,
   Ellipsis,
+  MonitorDown,
   Palette,
   Plus,
   Search,
   Upload,
   X,
 } from "lucide-react";
+import { usePwaInstall } from "../../hooks/use-pwa-install";
 
 export function LibraryTopbar({
   search,
@@ -26,6 +30,10 @@ export function LibraryTopbar({
   onImportFile: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onCreateDoc: () => void;
 }) {
+  const { canPrompt, isIosSafari, showIosTip, install, dismissTip } =
+    usePwaInstall();
+  const showInstall = canPrompt || isIosSafari;
+
   return (
     <header className="library-topbar">
       <div className="mobile-brand-row">
@@ -47,6 +55,24 @@ export function LibraryTopbar({
                 <Palette size={15} aria-hidden="true" />
                 Themes
               </Link>
+              {showInstall ? (
+                <button
+                  type="button"
+                  className="top-more-item"
+                  onClick={() => void install()}
+                >
+                  <MonitorDown size={15} aria-hidden="true" />
+                  Install
+                </button>
+              ) : null}
+              {showIosTip ? (
+                <p className="pwa-install-tip" role="status">
+                  Tap Share, then Add to Home Screen.
+                  <button type="button" onClick={dismissTip}>
+                    Dismiss
+                  </button>
+                </p>
+              ) : null}
               <button
                 type="button"
                 className="top-more-item"
@@ -89,6 +115,17 @@ export function LibraryTopbar({
           <Palette size={15} aria-hidden="true" />
           <span className="top-action-label">Themes</span>
         </Link>
+        {showInstall ? (
+          <button
+            type="button"
+            className="secondary-button top-action-install"
+            onClick={() => void install()}
+            aria-label="Install Margin as an app"
+          >
+            <MonitorDown size={15} aria-hidden="true" />
+            <span className="top-action-label">Install</span>
+          </button>
+        ) : null}
         <button
           className="secondary-button export-zip-button top-action-export"
           onClick={onExport}
@@ -112,6 +149,14 @@ export function LibraryTopbar({
           <span className="top-action-label">New page</span>
         </button>
       </div>
+      {showIosTip ? (
+        <p className="pwa-install-tip pwa-install-tip-desktop" role="status">
+          On iPhone or iPad: tap Share, then Add to Home Screen.
+          <button type="button" onClick={dismissTip}>
+            Dismiss
+          </button>
+        </p>
+      ) : null}
     </header>
   );
 }
