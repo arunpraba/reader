@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -17,13 +17,37 @@ const geistMono = Geist_Mono({
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
+  applicationName: "Margin",
   title: "Margin — Immersive Markdown Reader",
   description:
     "Read, listen, repeat, and revisit your saved Markdown documents.",
   icons: {
-    icon: `${basePath}/favicon.svg`,
+    icon: [
+      { url: `${basePath}/favicon.svg`, type: "image/svg+xml" },
+      { url: `${basePath}/icon-192.png`, sizes: "192x192", type: "image/png" },
+      { url: `${basePath}/icon-512.png`, sizes: "512x512", type: "image/png" },
+    ],
     shortcut: `${basePath}/favicon.svg`,
+    apple: `${basePath}/apple-touch-icon.png`,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Margin",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#234b40" },
+    { media: "(prefers-color-scheme: dark)", color: "#1c1b19" },
+  ],
 };
 
 const themeBootScript = `(function(){try{var k=${JSON.stringify(THEME_STORAGE_KEY)};var d=${JSON.stringify(DEFAULT_THEME_ID)};var themes=${JSON.stringify(
@@ -39,6 +63,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="stylesheet" href={`${basePath}/katex-fonts.css`} />
         <link rel="stylesheet" href={`${basePath}/reader-highlights.css`} />
       </head>

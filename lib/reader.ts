@@ -1,4 +1,3 @@
-import { toString } from "mdast-util-to-string";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
@@ -24,6 +23,47 @@ export type Block = {
   text: string;
   sentences: string[][];
 };
+
+type MdastNode = {
+  type?: string;
+  depth?: number;
+  value?: string;
+  alt?: string;
+  children?: MdastNode[];
+};
+
+/** Containers of block children — join with spaces so nested lists/quotes stay separable. */
+const BLOCK_CONTAINER = new Set([
+  "list",
+  "listItem",
+  "blockquote",
+  "table",
+  "tableRow",
+  "root",
+]);
+
+/**
+ * Extract speakable text from mdast.
+ * Skips images (alt would desync from DOM) and fenced code (not read aloud).
+ */
+export function nodeReadableText(node: unknown): string {
+  if (!node || typeof node !== "object") return "";
+  const n = node as MdastNode;
+  if (n.type === "image" || n.type === "imageReference" || n.type === "code") {
+    return "";
+  }
+  if (n.type === "text" || n.type === "inlineCode") {
+    return n.value ?? "";
+  }
+  const children = n.children ?? [];
+  if (!children.length) return "";
+  const parts = children.map(nodeReadableText).filter(Boolean);
+  if (!parts.length) return "";
+  const joined = BLOCK_CONTAINER.has(n.type ?? "")
+    ? parts.join(" ")
+    : parts.join("");
+  return joined.replace(/\s+/g, " ").trim();
+}
 
 const SCRIPT_LANGUAGES: Array<{ pattern: RegExp; language: string }> = [
   { pattern: /[\u3040-\u30FF\u31F0-\u31FF]/u, language: "ja-JP" },
@@ -104,20 +144,20 @@ export function parseMarkdown(content: string): Block[] {
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMath)
-    .parse(content) as {
-    children: Array<{
-      type: string;
-      depth?: number;
-      children?: Array<{ children?: unknown[] }>;
-      value?: string;
-    }>;
-  };
+    .parse(content) as { children: MdastNode[] };
+
   return tree.children
     .filter(
-      (node) => !["thematicBreak", "definition", "html"].includes(node.type),
+      (node) =>
+        ![
+          "thematicBreak",
+          "definition",
+          "html",
+          "code", // fenced code / mermaid — shown, not spoken
+        ].includes(node.type ?? ""),
     )
     .map((node) => {
-      let type: Block["type"] =
+      const type: Block["type"] =
         node.type === "heading"
           ? node.depth === 1
             ? "h1"
@@ -126,22 +166,22 @@ export function parseMarkdown(content: string): Block[] {
             ? "list"
             : node.type === "table"
               ? "table"
-              : node.type === "code"
-                ? "code"
-                : node.type === "blockquote"
-                  ? "quote"
-                  : "p";
+              : node.type === "blockquote"
+                ? "quote"
+                : "p";
       const tableText =
         node.type === "table"
           ? (node.children ?? [])
               .map((row) =>
-                ((row as { children?: unknown[] }).children ?? [])
-                  .map((cell) => toString(cell as never))
+                (row.children ?? [])
+                  .map((cell) => nodeReadableText(cell))
+                  .filter(Boolean)
                   .join("; "),
               )
+              .filter(Boolean)
               .join(". ")
           : "";
-      const text = (tableText || toString(node as never) || node.value || "")
+      const text = (tableText || nodeReadableText(node))
         .replace(/\s+/g, " ")
         .trim();
       const sentenceTexts =
@@ -151,11 +191,7 @@ export function parseMarkdown(content: string): Block[] {
             : []
           : type === "list"
             ? (node.children ?? [])
-                .map((item) =>
-                  toString(item as never)
-                    .replace(/\s+/g, " ")
-                    .trim(),
-                )
+                .map((item) => nodeReadableText(item))
                 .filter(Boolean)
                 .flatMap((item) => splitSentences(item))
             : splitSentences(text);
