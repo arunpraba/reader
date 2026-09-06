@@ -1,4 +1,7 @@
+import { Link2, Upload } from "lucide-react";
+
 export function ImportLinkForm({
+  hasDocs,
   importLink,
   importingLink,
   importLinkError,
@@ -7,6 +10,7 @@ export function ImportLinkForm({
   onSubmit,
   onImportFile,
 }: {
+  hasDocs: boolean;
   importLink: string;
   importingLink: boolean;
   importLinkError: string;
@@ -16,7 +20,9 @@ export function ImportLinkForm({
   onImportFile: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div className="import-actions">
+    <div
+      className={`import-actions${hasDocs ? " import-actions-has-docs" : ""}`}
+    >
       <form
         className="link-import"
         onSubmit={(event) => {
@@ -24,18 +30,19 @@ export function ImportLinkForm({
           onSubmit();
         }}
       >
+        <Link2 size={15} aria-hidden="true" />
         <input
           type="url"
           inputMode="url"
-          placeholder="Paste a link to add a page…"
-          aria-label="Paste a link to add a page"
+          placeholder="Paste link"
+          aria-label="Paste link"
           value={importLink}
           disabled={importingLink}
           onChange={(event) => onImportLinkChange(event.target.value)}
           onPaste={onImportLinkPaste}
         />
         <button type="submit" disabled={importingLink || !importLink.trim()}>
-          {importingLink ? "Adding…" : "Add link"}
+          {importingLink ? "Adding…" : "Add"}
         </button>
       </form>
       {importLinkError && (
@@ -43,16 +50,15 @@ export function ImportLinkForm({
           {importLinkError}
         </p>
       )}
-      <div className="root-import">
-        <label>
-          ⇧ Import a markdown file
-          <input
-            type="file"
-            accept=".md,.markdown,.txt"
-            onChange={onImportFile}
-          />
-        </label>
-      </div>
+      <label className="root-import secondary-button">
+        <Upload size={15} aria-hidden="true" />
+        <span>Import file</span>
+        <input
+          type="file"
+          accept=".md,.markdown,.txt"
+          onChange={onImportFile}
+        />
+      </label>
     </div>
   );
 }

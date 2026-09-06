@@ -1,4 +1,5 @@
-import { formatDuration } from "../../../lib/reader";
+import { formatDuration, type HighlightLevels } from "@/lib/reader";
+import { estimatePlayheadDuration } from "@/lib/playback-engine";
 import { GapSettings } from "./gap-settings";
 import { HighlighterSettings } from "./highlighter-settings";
 import { PlaybackControls } from "./playback-controls";
@@ -6,17 +7,12 @@ import { RereadSettings } from "./reread-settings";
 import { SpeedSettings } from "./speed-settings";
 import { TypographySettings } from "./typography-settings";
 import { VoiceSettings } from "./voice-settings";
-import type { HighlightLevels } from "../../../lib/reader";
-import type { TtsVoiceOption } from "../../../lib/tts/types";
 
 export function ReaderSettingsPanel({
   estimate,
   wordCount,
-  ttsEngine,
   preferredVoice,
-  preferredEdgeVoice,
   voices,
-  edgeVoices,
   levels,
   highlightColors,
   fontSize,
@@ -33,9 +29,7 @@ export function ReaderSettingsPanel({
   playing,
   progress,
   hasWords,
-  onTtsEngineChange,
   onPreferredVoiceChange,
-  onPreferredEdgeVoiceChange,
   onLevelChange,
   onColorChange,
   onTypographyChange,
@@ -55,11 +49,8 @@ export function ReaderSettingsPanel({
 }: {
   estimate: number;
   wordCount: number;
-  ttsEngine: "browser" | "edge";
   preferredVoice: string;
-  preferredEdgeVoice: string;
   voices: SpeechSynthesisVoice[];
-  edgeVoices: TtsVoiceOption[];
   levels: HighlightLevels;
   highlightColors: { word: string; sentence: string; paragraph: string };
   fontSize: number;
@@ -76,9 +67,7 @@ export function ReaderSettingsPanel({
   playing: boolean;
   progress: number;
   hasWords: boolean;
-  onTtsEngineChange: (engine: "browser" | "edge") => void;
   onPreferredVoiceChange: (voice: string) => void;
-  onPreferredEdgeVoiceChange: (voice: string) => void;
   onLevelChange: (level: keyof HighlightLevels, enabled: boolean) => void;
   onColorChange: (level: keyof HighlightLevels, color: string) => void;
   onTypographyChange: (
@@ -113,14 +102,9 @@ export function ReaderSettingsPanel({
         <small>{wordCount} words · based on your speed and pauses</small>
       </div>
       <VoiceSettings
-        ttsEngine={ttsEngine}
         preferredVoice={preferredVoice}
-        preferredEdgeVoice={preferredEdgeVoice}
         voices={voices}
-        edgeVoices={edgeVoices}
-        onTtsEngineChange={onTtsEngineChange}
         onPreferredVoiceChange={onPreferredVoiceChange}
-        onPreferredEdgeVoiceChange={onPreferredEdgeVoiceChange}
       />
       <HighlighterSettings
         levels={levels}
@@ -156,6 +140,7 @@ export function ReaderSettingsPanel({
       <PlaybackControls
         playing={playing}
         progress={progress}
+        duration={estimatePlayheadDuration(wordCount, wpm)}
         hasWords={hasWords}
         onJump={onJump}
         onTogglePlay={onTogglePlay}

@@ -2,6 +2,11 @@ import type { PlaybackSettings } from "../playback-engine";
 import type { Word } from "../reader";
 import type { SpeakResult, TtsProvider, TtsSpeakContext } from "./types";
 
+function getSpeechSynthesis(): SpeechSynthesis | null {
+  if (typeof window === "undefined") return null;
+  return window.speechSynthesis ?? null;
+}
+
 export function createBrowserProvider(): TtsProvider {
   let intentionalCancel = false;
   let userPaused = false;
@@ -9,17 +14,17 @@ export function createBrowserProvider(): TtsProvider {
   const cancel = () => {
     intentionalCancel = true;
     userPaused = false;
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+    getSpeechSynthesis()?.cancel();
   };
 
   const pause = () => {
     userPaused = true;
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.pause();
+    getSpeechSynthesis()?.pause();
   };
 
   const resume = () => {
     userPaused = false;
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.resume();
+    getSpeechSynthesis()?.resume();
   };
 
   const configureUtterance = (
@@ -29,7 +34,8 @@ export function createBrowserProvider(): TtsProvider {
   ) => {
     utterance.lang = language;
     utterance.rate = Math.min(10, Math.max(0.1, settings.wpm / 150));
-    const available = speechSynthesis.getVoices();
+    const synthesis = getSpeechSynthesis();
+    const available = synthesis?.getVoices() ?? [];
     const preferred = available.find(
       (voice) =>
         voice.voiceURI === settings.preferredVoice &&
@@ -59,6 +65,11 @@ export function createBrowserProvider(): TtsProvider {
     onEnd: () => void,
   ) =>
     new Promise<SpeakResult>((resolve) => {
+      const synthesis = getSpeechSynthesis();
+      if (!synthesis || typeof SpeechSynthesisUtterance === "undefined") {
+        resolve("end");
+        return;
+      }
       intentionalCancel = false;
       let settled = false;
       let started = false;
@@ -87,17 +98,16 @@ export function createBrowserProvider(): TtsProvider {
           finish("end");
           return;
         }
-        if (typeof speechSynthesis === "undefined") return;
-        if (speechSynthesis.paused && !userPaused) speechSynthesis.resume();
+        if (synthesis.paused && !userPaused) synthesis.resume();
         if (
           started &&
           !userPaused &&
-          !speechSynthesis.speaking &&
-          !speechSynthesis.pending
+          !synthesis.speaking &&
+          !synthesis.pending
         )
           finish("retry");
       }, 1500);
-      speechSynthesis.speak(utterance);
+      synthesis.speak(utterance);
     });
 
   const speakWord = async (
@@ -105,6 +115,8 @@ export function createBrowserProvider(): TtsProvider {
     settings: PlaybackSettings,
     ctx: TtsSpeakContext,
   ): Promise<SpeakResult> => {
+    if (!getSpeechSynthesis() || typeof SpeechSynthesisUtterance === "undefined")
+      return "end";
     for (;;) {
       if (!ctx.isActive()) return "end";
       const utterance = new SpeechSynthesisUtterance(word.text);
@@ -121,6 +133,8 @@ export function createBrowserProvider(): TtsProvider {
     ctx: TtsSpeakContext,
     onWord: (word: Word) => void,
   ): Promise<SpeakResult> => {
+    if (!getSpeechSynthesis() || typeof SpeechSynthesisUtterance === "undefined")
+      return "end";
     for (;;) {
       if (!ctx.isActive()) return "end";
       const text = run.map((word) => word.text).join(" ");

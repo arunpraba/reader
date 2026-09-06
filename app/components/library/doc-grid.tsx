@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import type { Doc, Folder } from "../../../lib/storage";
 import { DocCard } from "./doc-card";
 
@@ -25,11 +26,15 @@ export function DocGrid({
           onDelete={() => onDeleteDoc(doc.id, doc.title)}
         />
       ))}
-      <button className="doc-card new-card" onClick={onCreateDoc}>
-        <span>＋</span>
-        <strong>New page</strong>
-        <small>Opens the editor so you can write, then listen</small>
-      </button>
+      {visible.length === 0 && (
+        <button className="doc-card new-card" onClick={onCreateDoc}>
+          <span className="new-card-mark" aria-hidden="true">
+            <Plus size={22} />
+          </span>
+          <strong>New page</strong>
+          <small>Start writing</small>
+        </button>
+      )}
     </div>
   );
 }

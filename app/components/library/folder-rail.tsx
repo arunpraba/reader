@@ -1,56 +1,30 @@
-import type { RefObject } from "react";
+import { FolderPlus, LayoutGrid, Trash2 } from "lucide-react";
 import type { Doc, Folder } from "../../../lib/storage";
-import { FolderCompose } from "./folder-compose";
 
 export function FolderRail({
   selected,
   folders,
   docs,
-  isMobile,
-  creatingFolder,
-  newFolder,
-  folderInputRef,
   onSelect,
   onStartFolderCreate,
-  onNewFolderChange,
-  onCreateFolder,
-  onFolderBlur,
-  onCancelFolderCreate,
   onDeleteFolder,
 }: {
   selected: string | null | "all";
   folders: Folder[];
   docs: Doc[];
-  isMobile: boolean;
-  creatingFolder: boolean;
-  newFolder: string;
-  folderInputRef: RefObject<HTMLInputElement | null>;
   onSelect: (id: string | null | "all") => void;
   onStartFolderCreate: () => void;
-  onNewFolderChange: (value: string) => void;
-  onCreateFolder: () => void;
-  onFolderBlur: () => void;
-  onCancelFolderCreate: () => void;
   onDeleteFolder: (id: string, name: string) => void;
 }) {
   return (
     <div className="folder-rail" aria-label="Folders">
-      <div className="folder-rail-head">
-        <strong>Folders</strong>
-        <button
-          type="button"
-          className="folder-rail-add"
-          onClick={onStartFolderCreate}
-        >
-          ＋ New folder
-        </button>
-      </div>
       <div className="folder-chips">
         <button
           type="button"
           className={`folder-chip ${selected === "all" ? "active" : ""}`}
           onClick={() => onSelect("all")}
         >
+          <LayoutGrid size={14} aria-hidden="true" />
           All pages
         </button>
         {folders.map((folder) => (
@@ -72,21 +46,19 @@ export function FolderRail({
               aria-label={`Delete folder ${folder.name}`}
               title={`Delete folder ${folder.name}`}
             >
-              ×
+              <Trash2 size={14} aria-hidden="true" />
             </button>
           </div>
         ))}
-        {isMobile && creatingFolder && (
-          <FolderCompose
-            isMobile={isMobile}
-            newFolder={newFolder}
-            folderInputRef={folderInputRef}
-            onNewFolderChange={onNewFolderChange}
-            onSubmit={onCreateFolder}
-            onBlur={onFolderBlur}
-            onCancel={onCancelFolderCreate}
-          />
-        )}
+        <button
+          type="button"
+          className="folder-rail-add"
+          onClick={onStartFolderCreate}
+          aria-label="New folder"
+          title="New folder"
+        >
+          <FolderPlus size={15} aria-hidden="true" />
+        </button>
       </div>
     </div>
   );

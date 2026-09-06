@@ -6,6 +6,7 @@ import {
   isImportUrl,
 } from "../../lib/import-url";
 import { exportLibrary } from "../../lib/export-library";
+import { createId } from "../../lib/id";
 import { Doc, Folder, storage } from "../../lib/storage";
 
 async function loadLibrary() {
@@ -117,26 +118,26 @@ export function useLibrary({
 
   const createDoc = async () => {
     const doc: Doc = {
-      id: crypto.randomUUID(),
+      id: createId(),
       folderId: selected === "all" ? null : selected,
       title: "Untitled",
       content: "# Untitled\n\nStart writing here…",
       updatedAt: Date.now(),
     };
     await storage.save(doc);
-    router.push(`/reader?id=${doc.id}&edit=1`);
+    router.push(`/reader/?id=${doc.id}&edit=1`);
   };
 
   const saveImportedDoc = async (title: string, content: string) => {
     const doc: Doc = {
-      id: crypto.randomUUID(),
+      id: createId(),
       folderId: selected === "all" ? null : selected,
       title: title.trim() || "Untitled",
       content,
       updatedAt: Date.now(),
     };
     await storage.save(doc);
-    router.push(`/reader?id=${doc.id}`);
+    router.push(`/reader/?id=${doc.id}`);
   };
 
   const importFile = (event: React.ChangeEvent<HTMLInputElement>) => {

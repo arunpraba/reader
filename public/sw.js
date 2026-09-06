@@ -1,5 +1,5 @@
 /* Margin PWA service worker — network-first, cache fallback for same-origin GETs. */
-const CACHE = "margin-v1";
+const CACHE = "margin-v2";
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 
 self.addEventListener("install", (event) => {
@@ -13,6 +13,7 @@ self.addEventListener("install", (event) => {
             `${BASE}/`,
             `${BASE}/manifest.webmanifest`,
             `${BASE}/favicon.svg`,
+            `${BASE}/now-playing.png`,
             `${BASE}/icon-192.png`,
             `${BASE}/icon-512.png`,
             `${BASE}/apple-touch-icon.png`,

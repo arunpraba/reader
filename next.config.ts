@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   basePath,
   assetPrefix: basePath || undefined,
+  // Emulator reaches the host Next server via 10.0.2.2
+  allowedDevOrigins: ["10.0.2.2", "127.0.0.1", "localhost"],
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },

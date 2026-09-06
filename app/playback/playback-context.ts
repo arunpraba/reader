@@ -1,11 +1,8 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type {
-  PlaybackDocument,
-  PlaybackSettings,
-} from "../../lib/playback-engine";
-import type { Word } from "../../lib/reader";
+import type { PlaybackDocument, PlaybackSettings } from "@/lib/playback-engine";
+import type { Word } from "@/lib/reader";
 
 export type PlaybackContextValue = {
   docId: string | null;

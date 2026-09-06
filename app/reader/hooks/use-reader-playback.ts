@@ -17,8 +17,6 @@ type ReaderSettingsSlice = {
   sentenceRepeats: number;
   paragraphRepeats: number;
   preferredVoice: string;
-  ttsEngine: "browser" | "edge";
-  preferredEdgeVoice: string;
 };
 
 export function useReaderPlayback({
@@ -64,8 +62,6 @@ export function useReaderPlayback({
       sentenceRepeats: settings.sentenceRepeats,
       paragraphRepeats: settings.paragraphRepeats,
       preferredVoice: settings.preferredVoice,
-      ttsEngine: settings.ttsEngine,
-      preferredEdgeVoice: settings.preferredEdgeVoice,
     });
   }, [
     updateSettings,
@@ -78,8 +74,6 @@ export function useReaderPlayback({
     settings.sentenceRepeats,
     settings.paragraphRepeats,
     settings.preferredVoice,
-    settings.ttsEngine,
-    settings.preferredEdgeVoice,
   ]);
 
   useEffect(() => {

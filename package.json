@@ -13,10 +13,10 @@
     "lint": "eslint . --ignore-pattern .next"
   },
   "dependencies": {
-    "edge-tts-universal": "^1.4.0",
     "fflate": "^0.8.3",
     "github-markdown-css": "^5.9.0",
     "katex": "^0.18.4",
+    "lucide-react": "^1.41.0",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.17.0",
     "next": "16.2.6",

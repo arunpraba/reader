@@ -1,7 +1,11 @@
 export type ThemeId =
   | "margin-light"
-  | "margin-dark"
+  | "paper"
+  | "ocean"
+  | "sage"
+  | "dawn"
   | "sepia"
+  | "margin-dark"
   | "high-contrast"
   | "forest-night"
   | "midnight"
@@ -30,27 +34,66 @@ export const THEMES: ThemeMeta[] = [
   {
     id: "margin-light",
     label: "Margin Light",
-    description: "Warm cream paper with forest green and terracotta",
+    description: "Minimal Neutral — clean monochrome ebook chrome",
     kind: "light",
     preview: {
-      bg: "#eeece6",
-      surface: "#f9f8f4",
-      ink: "#24231f",
-      accent: "#bd552f",
-      green: "#234b40",
+      bg: "#ffffff",
+      surface: "#fdfdfd",
+      ink: "#171717",
+      accent: "#252525",
+      green: "#252525",
     },
   },
   {
-    id: "margin-dark",
-    label: "Margin Dark",
-    description: "Warm charcoal reading surface with soft cream ink",
-    kind: "dark",
+    id: "paper",
+    label: "Paper",
+    description: "Soft cool gray paper for calm daytime reading",
+    kind: "light",
     preview: {
-      bg: "#1c1b19",
-      surface: "#262421",
-      ink: "#ece8e0",
-      accent: "#d4683a",
-      green: "#3d6a5d",
+      bg: "#f4f5f7",
+      surface: "#ffffff",
+      ink: "#1a1d21",
+      accent: "#3b82f6",
+      green: "#334155",
+    },
+  },
+  {
+    id: "ocean",
+    label: "Ocean",
+    description: "Airy blue surfaces with deep sea accents",
+    kind: "light",
+    preview: {
+      bg: "#f3f8fb",
+      surface: "#ffffff",
+      ink: "#0f2740",
+      accent: "#0e7490",
+      green: "#155e75",
+    },
+  },
+  {
+    id: "sage",
+    label: "Sage",
+    description: "Soft green reading surface with leafy accents",
+    kind: "light",
+    preview: {
+      bg: "#f3f7f4",
+      surface: "#ffffff",
+      ink: "#1c2b22",
+      accent: "#3f6b52",
+      green: "#3f6b52",
+    },
+  },
+  {
+    id: "dawn",
+    label: "Dawn",
+    description: "Cool lilac mist with ink-blue accents",
+    kind: "light",
+    preview: {
+      bg: "#f7f5fb",
+      surface: "#ffffff",
+      ink: "#1e1b2e",
+      accent: "#5b4b8a",
+      green: "#4c3d73",
     },
   },
   {
@@ -64,6 +107,19 @@ export const THEMES: ThemeMeta[] = [
       ink: "#3b2f22",
       accent: "#a0502e",
       green: "#3d5246",
+    },
+  },
+  {
+    id: "margin-dark",
+    label: "Margin Dark",
+    description: "Minimal Neutral dark — flat monochrome reading chrome",
+    kind: "dark",
+    preview: {
+      bg: "#292929",
+      surface: "#1f1f1f",
+      ink: "#fafafa",
+      accent: "#ebebeb",
+      green: "#ebebeb",
     },
   },
   {

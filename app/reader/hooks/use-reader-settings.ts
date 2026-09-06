@@ -43,10 +43,6 @@ export function useReaderSettings() {
   const [preferredVoice, setPreferredVoice] = useState(
     defaultReaderSettings.preferredVoice,
   );
-  const [ttsEngine, setTtsEngine] = useState(defaultReaderSettings.ttsEngine);
-  const [preferredEdgeVoice, setPreferredEdgeVoice] = useState(
-    defaultReaderSettings.preferredEdgeVoice,
-  );
   const [fontSize, setFontSize] = useState(defaultReaderSettings.fontSize);
   const [lineHeight, setLineHeight] = useState(
     defaultReaderSettings.lineHeight,
@@ -69,8 +65,6 @@ export function useReaderSettings() {
     setSentenceRepeats(saved.sentenceRepeats);
     setParagraphRepeats(saved.paragraphRepeats);
     setPreferredVoice(saved.preferredVoice);
-    setTtsEngine(saved.ttsEngine);
-    setPreferredEdgeVoice(saved.preferredEdgeVoice);
     setFontSize(saved.fontSize);
     setLineHeight(saved.lineHeight);
     setLetterSpacing(saved.letterSpacing);
@@ -93,8 +87,6 @@ export function useReaderSettings() {
       sentenceRepeats,
       paragraphRepeats,
       preferredVoice,
-      ttsEngine,
-      preferredEdgeVoice,
       fontSize,
       lineHeight,
       letterSpacing,
@@ -115,8 +107,6 @@ export function useReaderSettings() {
     sentenceRepeats,
     paragraphRepeats,
     preferredVoice,
-    ttsEngine,
-    preferredEdgeVoice,
     fontSize,
     lineHeight,
     letterSpacing,
@@ -146,7 +136,8 @@ export function useReaderSettings() {
     ) => {
       if (next.fontSize !== undefined) setFontSize(next.fontSize);
       if (next.lineHeight !== undefined) setLineHeight(next.lineHeight);
-      if (next.letterSpacing !== undefined) setLetterSpacing(next.letterSpacing);
+      if (next.letterSpacing !== undefined)
+        setLetterSpacing(next.letterSpacing);
     },
     [],
   );
@@ -178,10 +169,6 @@ export function useReaderSettings() {
     setMinimized,
     preferredVoice,
     setPreferredVoice,
-    ttsEngine,
-    setTtsEngine,
-    preferredEdgeVoice,
-    setPreferredEdgeVoice,
     fontSize,
     lineHeight,
     letterSpacing,

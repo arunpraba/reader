@@ -5,7 +5,7 @@ import {
   updatePosition,
 } from "./media-player";
 import { createBrowserProvider } from "./tts/browser-provider";
-import { createEdgeProvider } from "./tts/edge-provider";
+import { browserTtsAvailable } from "./tts/capabilities";
 import type { TtsSpeakContext } from "./tts/types";
 import type { Word } from "./reader";
 
@@ -19,8 +19,6 @@ export type PlaybackSettings = {
   sentenceRepeats: number;
   paragraphRepeats: number;
   preferredVoice: string;
-  ttsEngine: "browser" | "edge";
-  preferredEdgeVoice: string;
 };
 
 export type PlaybackDocument = {
@@ -46,18 +44,15 @@ const defaultSettings: PlaybackSettings = {
   sentenceRepeats: 1,
   paragraphRepeats: 1,
   preferredVoice: "",
-  ttsEngine: "browser",
-  preferredEdgeVoice: "",
 };
 
-function estimateDuration(wordCount: number, wpm: number) {
+export function estimatePlayheadDuration(wordCount: number, wpm: number) {
   if (wordCount <= 0 || wpm <= 0) return 0;
   return (wordCount / wpm) * 60;
 }
 
 function createPlaybackEngine() {
   const browserProvider = createBrowserProvider();
-  const edgeProvider = createEdgeProvider();
   let doc: PlaybackDocument | null = null;
   let playing = false;
   let paused = false;
@@ -65,6 +60,11 @@ function createPlaybackEngine() {
   let active: Word | null = null;
   let runId = 0;
   let settings: PlaybackSettings = { ...defaultSettings };
+  let frozenMediaProgress: {
+    position: number;
+    duration: number;
+    playbackRate: number;
+  } | null = null;
   let cached: PlaybackSnapshot = {
     doc: null,
     playing: false,
@@ -73,8 +73,7 @@ function createPlaybackEngine() {
   };
   const listeners = new Set<() => void>();
 
-  const getProvider = () =>
-    settings.ttsEngine === "edge" ? edgeProvider : browserProvider;
+  const getProvider = () => browserProvider;
 
   const activeIndex = () => {
     const words = doc?.words ?? [];
@@ -89,11 +88,21 @@ function createPlaybackEngine() {
   };
 
   const getMediaProgress = () => {
+    if (frozenMediaProgress) return frozenMediaProgress;
     const words = doc?.words ?? [];
-    const duration = estimateDuration(words.length, settings.wpm);
+    const duration = estimatePlayheadDuration(words.length, settings.wpm);
     const index = activeIndex();
-    const position = words.length ? (index / words.length) * duration : 0;
-    return { position, duration, playbackRate: settings.wpm / 150 };
+    const safeIndex = index < 0 ? 0 : index;
+    const maxIndex = Math.max(1, words.length - 1);
+    const position = words.length
+      ? (Math.min(safeIndex, words.length - 1) / maxIndex) * duration
+      : 0;
+    return {
+      position,
+      duration,
+      // macOS extrapolates the scrubber while rate > 0 — must be 0 when paused.
+      playbackRate: playing ? settings.wpm / 150 : 0,
+    };
   };
 
   const syncMediaPosition = () => {
@@ -135,22 +144,28 @@ function createPlaybackEngine() {
     getProgress: getMediaProgress,
   });
 
-  const stop = (clearActive = true) => {
+  const haltSpeech = () => {
     intentionalCancel = true;
     runId += 1;
-    paused = false;
     browserProvider.cancel();
-    edgeProvider.cancel();
-    deactivateMediaPlayer();
+  };
+
+  const stop = (clearActive = true) => {
+    haltSpeech();
+    paused = false;
     playing = false;
+    frozenMediaProgress = null;
+    deactivateMediaPlayer();
     if (clearActive) active = null;
     emit();
   };
 
   const pause = () => {
     if (!playing || paused) return;
+    const snap = getMediaProgress();
     paused = true;
     playing = false;
+    frozenMediaProgress = { ...snap, playbackRate: 0 };
     getProvider().pause?.();
     setPlaybackState("paused");
     emit();
@@ -158,6 +173,7 @@ function createPlaybackEngine() {
 
   const resume = () => {
     if (!paused) return;
+    frozenMediaProgress = null;
     paused = false;
     playing = true;
     getProvider().resume?.();
@@ -190,14 +206,31 @@ function createPlaybackEngine() {
       step();
     });
 
+  const waitWhilePaused = (id: number) =>
+    new Promise<void>((resolve) => {
+      const step = () => {
+        if (id !== runId || !paused) {
+          resolve();
+          return;
+        }
+        window.setTimeout(step, 100);
+      };
+      step();
+    });
+
   const speakWord = async (word: Word, id: number) => {
+    await waitWhilePaused(id);
+    if (id !== runId) return;
     const ctx = speakContext(id);
     await getProvider().speakWord(word, settings, ctx);
   };
 
   const speakRun = async (run: Word[], id: number) => {
+    await waitWhilePaused(id);
+    if (id !== runId) return;
     const ctx = speakContext(id);
     await getProvider().speakRun(run, settings, ctx, (word) => {
+      if (paused) return;
       active = word;
       emit();
     });
@@ -206,18 +239,22 @@ function createPlaybackEngine() {
   const play = async (startIndex = 0) => {
     const words = doc?.words ?? [];
     if (!words.length) return;
+    if (!browserTtsAvailable()) return;
     const normalizedStart = Math.min(words.length - 1, Math.max(0, startIndex));
-    stop(false);
+    // Cancel speech only — keep Media Session / silent track alive across seeks.
+    haltSpeech();
     const id = ++runId;
     intentionalCancel = false;
     playing = true;
     paused = false;
+    frozenMediaProgress = null;
     progress = normalizedStart / words.length;
     active = words[normalizedStart];
     activateMediaPlayer(mediaHandlers(), {
-      silentLoop: settings.ttsEngine === "browser",
-      resumeSpeech: settings.ttsEngine === "browser",
+      silentLoop: true,
+      resumeSpeech: true,
     });
+    setPlaybackState("playing");
     emit();
     const remainingWords = words.slice(normalizedStart);
     const paragraphs = remainingWords.reduce<Word[][]>((groups, word) => {
@@ -318,12 +355,15 @@ function createPlaybackEngine() {
     );
     group = Math.min(starts.length - 1, Math.max(0, group + direction));
     const target = starts[group] ?? 0;
-    const resumePlayback = playing || paused;
-    stop(false);
+    const shouldResume = playing || paused;
+    haltSpeech();
+    playing = false;
+    paused = shouldResume ? false : paused;
+    frozenMediaProgress = null;
     active = words[target];
     progress = target / Math.max(1, words.length);
     emit();
-    if (resumePlayback) queueMicrotask(() => void play(target));
+    if (shouldResume) queueMicrotask(() => void play(target));
   };
 
   const seekToRatio = (ratio: number, resumePlayback = true) => {
@@ -333,12 +373,24 @@ function createPlaybackEngine() {
       words.length - 1,
       Math.max(0, Math.round(ratio * (words.length - 1))),
     );
-    const shouldResume = resumePlayback && (playing || paused);
-    stop(false);
+    const wasActive = playing || paused;
+    const shouldResume = resumePlayback && wasActive;
+    haltSpeech();
+    playing = false;
+    // Keep session alive while scrubbing / seeking without tearing Media Session down.
+    paused = wasActive && !shouldResume;
+    frozenMediaProgress = null;
     active = words[target];
     progress = target / Math.max(1, words.length);
+    if (paused) {
+      frozenMediaProgress = { ...getMediaProgress(), playbackRate: 0 };
+    }
     emit();
-    if (shouldResume) queueMicrotask(() => void play(target));
+    if (shouldResume) {
+      queueMicrotask(() => void play(target));
+    } else if (wasActive) {
+      setPlaybackState("paused");
+    }
     return target;
   };
 
@@ -364,6 +416,7 @@ function createPlaybackEngine() {
     },
     updateSettings(next: PlaybackSettings) {
       settings = next;
+      syncMediaPosition();
     },
     play,
     pause,

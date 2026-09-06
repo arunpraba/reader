@@ -25,7 +25,7 @@ export function GlobalMiniPlayer({
       progress={progress}
       playing={playing}
       onExpand={() => {
-        router.push(`/reader?id=${docId}`);
+        router.push(`/reader/?id=${docId}`);
       }}
       onTogglePlay={onTogglePlay}
     />

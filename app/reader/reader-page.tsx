@@ -18,7 +18,7 @@ export function ReaderPage() {
   const settings = useReaderSettings();
   const { doc, setDoc, editing, setEditing, saveState, save, positionRef } =
     useReaderDocument();
-  const { voices, edgeVoices } = useTtsVoices(settings.ttsEngine);
+  const { voices } = useTtsVoices();
 
   const blocks = useMemo(
     () => parseMarkdown(doc?.content ?? ""),
@@ -91,11 +91,8 @@ export function ReaderPage() {
             <ReaderSettingsPanel
               estimate={estimate}
               wordCount={words.length}
-              ttsEngine={settings.ttsEngine}
               preferredVoice={settings.preferredVoice}
-              preferredEdgeVoice={settings.preferredEdgeVoice}
               voices={voices}
-              edgeVoices={edgeVoices}
               levels={settings.levels}
               highlightColors={settings.highlightColors}
               fontSize={settings.fontSize}
@@ -112,9 +109,7 @@ export function ReaderPage() {
               playing={playback.playing}
               progress={playback.progress}
               hasWords={words.length > 0}
-              onTtsEngineChange={settings.setTtsEngine}
               onPreferredVoiceChange={settings.setPreferredVoice}
-              onPreferredEdgeVoiceChange={settings.setPreferredEdgeVoice}
               onLevelChange={(level, enabled) =>
                 settings.setLevels({ ...settings.levels, [level]: enabled })
               }

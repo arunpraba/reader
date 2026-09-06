@@ -1,6 +1,7 @@
 "use client";
 
 import { DocGrid } from "./components/library/doc-grid";
+import { FolderCreateModal } from "./components/library/folder-create-modal";
 import { FolderRail } from "./components/library/folder-rail";
 import { ImportLinkForm } from "./components/library/import-link-form";
 import { LibrarySidebar } from "./components/library/library-sidebar";
@@ -34,13 +35,6 @@ export function LibraryPage() {
     selected,
   );
 
-  const handleFolderBlur = () => {
-    requestAnimationFrame(() => {
-      if (!library.folderInputRef.current) return;
-      void library.createFolder();
-    });
-  };
-
   return (
     <main
       className={`library-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
@@ -50,17 +44,9 @@ export function LibraryPage() {
         folders={library.folders}
         docs={library.docs}
         sidebarCollapsed={sidebarCollapsed}
-        isMobile={isMobile}
-        creatingFolder={library.creatingFolder}
-        newFolder={library.newFolder}
-        folderInputRef={library.folderInputRef}
         onSelect={setSelected}
         onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
         onStartFolderCreate={library.startFolderCreate}
-        onNewFolderChange={library.setNewFolder}
-        onCreateFolder={() => void library.createFolder()}
-        onFolderBlur={handleFolderBlur}
-        onCancelFolderCreate={library.cancelFolderCreate}
         onDeleteFolder={(id, name) => void library.deleteFolder(id, name)}
       />
       <section className="library-main">
@@ -74,42 +60,33 @@ export function LibraryPage() {
           onCreateDoc={() => void library.createDoc()}
         />
         <div className="library-content">
-          <WelcomeHero />
+          <WelcomeHero hasDocs={library.docs.length > 0} />
           <FolderRail
             selected={selected}
             folders={library.folders}
             docs={library.docs}
-            isMobile={isMobile}
-            creatingFolder={library.creatingFolder}
-            newFolder={library.newFolder}
-            folderInputRef={library.folderInputRef}
             onSelect={setSelected}
             onStartFolderCreate={library.startFolderCreate}
-            onNewFolderChange={library.setNewFolder}
-            onCreateFolder={() => void library.createFolder()}
-            onFolderBlur={handleFolderBlur}
-            onCancelFolderCreate={library.cancelFolderCreate}
             onDeleteFolder={(id, name) => void library.deleteFolder(id, name)}
           />
-          <div className="section-head">
-            <div>
+          <div
+            className={`section-head${library.docs.length > 0 ? " section-head-has-docs" : ""}`}
+          >
+            <div className="section-head-copy">
               <h2>
                 {search
                   ? `Search results for “${search}”`
                   : selected === "all"
-                    ? "Recent pages"
+                    ? "Pages"
                     : library.folders.find((folder) => folder.id === selected)
                         ?.name}
               </h2>
               <p>
                 {visible.length} {visible.length === 1 ? "page" : "pages"}
-                {search ? " across titles, text, and folders" : ""}
-                {!search && selected === "all"
-                  ? " · New pages land here until you file them"
-                  : ""}
               </p>
             </div>
             <ImportLinkForm
+              hasDocs={library.docs.length > 0}
               importLink={library.importLink}
               importingLink={library.importingLink}
               importLinkError={library.importLinkError}
@@ -130,6 +107,14 @@ export function LibraryPage() {
           />
         </div>
       </section>
+      <FolderCreateModal
+        open={library.creatingFolder}
+        newFolder={library.newFolder}
+        folderInputRef={library.folderInputRef}
+        onNewFolderChange={library.setNewFolder}
+        onSubmit={() => void library.createFolder()}
+        onCancel={library.cancelFolderCreate}
+      />
     </main>
   );
 }

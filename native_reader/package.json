@@ -1,0 +1,27 @@
+{
+  "name": "margin-native",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor WebView shell for Margin (https://arunpraba.github.io/reader/)",
+  "scripts": {
+    "sync": "npx cap sync",
+    "ios": "npx cap run ios",
+    "android": "npx cap run android",
+    "open:ios": "npx cap open ios",
+    "open:android": "npx cap open android",
+    "build:apk": "JAVA_HOME=\"${JAVA_HOME:-$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home}\" ./android/gradlew -p android assembleRelease",
+    "build:apk:debug": "JAVA_HOME=\"${JAVA_HOME:-$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home}\" ./android/gradlew -p android assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "typescript": "^5.9.3"
+  }
+}

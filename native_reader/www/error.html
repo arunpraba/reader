@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1.0"
+    />
+    <title>Margin — Offline</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #eeece6;
+        --ink: #1c2b26;
+        --muted: #5a6b64;
+        --accent: #234b40;
+        --btn: #234b40;
+        --btn-text: #f7f5ef;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(
+            120% 80% at 10% 0%,
+            #f7f4ec 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            90% 70% at 100% 100%,
+            #e2ddd2 0%,
+            transparent 50%
+          ),
+          var(--bg);
+        color: var(--ink);
+        font-family:
+          "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      }
+
+      main {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: max(32px, env(safe-area-inset-top))
+          max(28px, env(safe-area-inset-right))
+          max(32px, env(safe-area-inset-bottom))
+          max(28px, env(safe-area-inset-left));
+        max-width: 28rem;
+        margin: 0 auto;
+      }
+
+      .brand {
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.75rem, 5vw, 2.25rem);
+        line-height: 1.15;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.45;
+      }
+
+      button {
+        margin-top: 0.75rem;
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        background: var(--btn);
+        color: var(--btn-text);
+        font: inherit;
+        font-size: 1rem;
+        padding: 0.85rem 1.25rem;
+        cursor: pointer;
+      }
+
+      button:active {
+        transform: translateY(1px);
+        opacity: 0.92;
+      }
+
+      .hint {
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">Margin</div>
+      <h1>Can’t reach your reading space</h1>
+      <p>
+        The app needs a network connection to load Margin from GitHub Pages.
+        Check your connection, then try again.
+      </p>
+      <button type="button" id="retry">Retry</button>
+      <p class="hint">https://arunpraba.github.io/reader/</p>
+    </main>
+    <script>
+      const REMOTE = "https://arunpraba.github.io/reader/";
+      document.getElementById("retry").addEventListener("click", () => {
+        window.location.replace(REMOTE);
+      });
+    </script>
+  </body>
+</html>

@@ -1,41 +1,32 @@
 import Link from "next/link";
-import type { Doc, Folder } from "../../../lib/storage";
-import { FolderCompose } from "./folder-compose";
-import type { RefObject } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Folder,
+  FolderPlus,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import type { Doc, Folder as FolderType } from "../../../lib/storage";
 
 export function LibrarySidebar({
   selected,
   folders,
   docs,
   sidebarCollapsed,
-  isMobile,
-  creatingFolder,
-  newFolder,
-  folderInputRef,
   onSelect,
   onToggleSidebar,
   onStartFolderCreate,
-  onNewFolderChange,
-  onCreateFolder,
-  onFolderBlur,
-  onCancelFolderCreate,
   onDeleteFolder,
 }: {
   selected: string | null | "all";
-  folders: Folder[];
+  folders: FolderType[];
   docs: Doc[];
   sidebarCollapsed: boolean;
-  isMobile: boolean;
-  creatingFolder: boolean;
-  newFolder: string;
-  folderInputRef: RefObject<HTMLInputElement | null>;
   onSelect: (id: string | null | "all") => void;
   onToggleSidebar: () => void;
   onStartFolderCreate: () => void;
-  onNewFolderChange: (value: string) => void;
-  onCreateFolder: () => void;
-  onFolderBlur: () => void;
-  onCancelFolderCreate: () => void;
   onDeleteFolder: (id: string, name: string) => void;
 }) {
   return (
@@ -45,7 +36,7 @@ export function LibrarySidebar({
           <span className="brand-mark">M</span>
           <span className="brand-copy">
             <strong>Margin</strong>
-            <small>Reading workspace</small>
+            <small>Library</small>
           </span>
         </Link>
         <button
@@ -56,7 +47,11 @@ export function LibrarySidebar({
           title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!sidebarCollapsed}
         >
-          {sidebarCollapsed ? "›" : "‹"}
+          {sidebarCollapsed ? (
+            <ChevronRight size={16} aria-hidden="true" />
+          ) : (
+            <ChevronLeft size={16} aria-hidden="true" />
+          )}
         </button>
       </div>
       <button
@@ -64,7 +59,8 @@ export function LibrarySidebar({
         onClick={() => onSelect("all")}
         title="All pages"
       >
-        <span>⌂</span> <span className="nav-item-label">All pages</span>
+        <FileText className="nav-glyph" aria-hidden="true" size={16} />
+        <span className="nav-item-label">All pages</span>
       </button>
       <div className="nav-label">
         <span className="nav-label-text">Folders</span>
@@ -75,7 +71,7 @@ export function LibrarySidebar({
           aria-label="Create folder"
           title="Create folder"
         >
-          ＋
+          <FolderPlus size={16} aria-hidden="true" />
         </button>
       </div>
       <nav aria-label="Folders">
@@ -86,7 +82,7 @@ export function LibrarySidebar({
               onClick={() => onSelect(folder.id)}
               title={folder.name}
             >
-              <span>▰</span>
+              <Folder className="nav-glyph" aria-hidden="true" size={16} />
               <span className="nav-item-label">{folder.name}</span>
               <small>
                 {docs.filter((doc) => doc.folderId === folder.id).length}
@@ -99,27 +95,25 @@ export function LibrarySidebar({
               aria-label={`Delete folder ${folder.name}`}
               title={`Delete folder ${folder.name}`}
             >
-              ×
+              <Trash2 size={14} aria-hidden="true" />
             </button>
           </div>
         ))}
-        {!isMobile && creatingFolder && (
-          <FolderCompose
-            isMobile={isMobile}
-            newFolder={newFolder}
-            folderInputRef={folderInputRef}
-            onNewFolderChange={onNewFolderChange}
-            onSubmit={onCreateFolder}
-            onBlur={onFolderBlur}
-            onCancel={onCancelFolderCreate}
-          />
+        {folders.length === 0 && (
+          <button
+            type="button"
+            className="folder-empty-hint"
+            onClick={onStartFolderCreate}
+          >
+            <Plus size={14} aria-hidden="true" />
+            <span>New folder</span>
+          </button>
         )}
       </nav>
       <div className="local-note">
-        <span>●</span>
         <div>
-          <strong>Private on this device</strong>
-          <small>Files are stored in your browser.</small>
+          <strong>On this device</strong>
+          <small>Stored in this browser.</small>
         </div>
       </div>
     </aside>

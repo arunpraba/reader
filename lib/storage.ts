@@ -1,3 +1,5 @@
+import { createId } from "./id";
+
 export type Folder = { id: string; name: string; createdAt: number };
 export type ReadingPosition = {
   blockIndex: number;
@@ -76,7 +78,7 @@ export const storage = {
   docs: () => all<Doc>("docs"),
   async folder(name: string) {
     const folder: Folder = {
-      id: crypto.randomUUID(),
+      id: createId(),
       name,
       createdAt: Date.now(),
     };
