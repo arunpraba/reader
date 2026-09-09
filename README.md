@@ -46,6 +46,15 @@ npm install
 npx expo start
 ```
 
+To build a local Android APK:
+
+```bash
+cd native_reader
+npm run build:apk
+```
+
+The APK is written to `native_reader/android/app/build/outputs/apk/release/app-release.apk`.
+
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
