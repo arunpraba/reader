@@ -37,7 +37,7 @@ export function ReaderTopbar({
       <div className="reader-actions">
         <span
           className="auto-language"
-          title="Languages are detected for every spoken word"
+          title="Languages are detected for every paragraph"
         >
           ◎{" "}
           {languages.map((lang) => languageNames[lang] ?? lang).join(" · ") ||

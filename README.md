@@ -13,7 +13,7 @@ Margin helps you build a personal library of Markdown pages and return to them w
 - **Your library, on this device** — Create and organize pages into folders, search instantly, import from files or links, and export a full backup as a ZIP. Nothing is uploaded to a server.
 - **Immersive reading** — A clean reader for GitHub-flavored Markdown, including math and diagrams, with themes, typography controls, and automatic resume from where you left off.
 - **Listen while you follow along** — Built-in text-to-speech highlights each word as it is spoken, with speed, pacing, and repeat controls, plus a mini-player that keeps playback going as you move through the app.
-- **Install anywhere** — Use Margin as a progressive web app in the browser, or run the optional native shell for iOS and Android (see [`native_reader/`](native_reader/README.md)).
+- **Install anywhere** — Use Margin as a progressive web app in the browser, or open the live site in the Expo WebView shell (see [`native_reader/`](native_reader/README.md)).
 
 ## Prerequisites
 
@@ -38,7 +38,13 @@ Open http://localhost:3000
 
 ## Native app
 
-For iOS/Android setup, sync, and APK builds, see [`native_reader/README.md`](native_reader/README.md).
+The Expo shell in [`native_reader/`](native_reader/README.md) loads the live site in a WebView:
+
+```bash
+cd native_reader
+npm install
+npx expo start
+```
 
 ## Learn More
 

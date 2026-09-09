@@ -1,40 +1,41 @@
-# Dependencies
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
 node_modules/
 
-# Logs / env
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-.env
-.env.*
-!.env.example
-
-# OS / editor
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-.idea/
-.vscode/
-*.iml
-
-# TypeScript / tooling
-*.tsbuildinfo
-.turbo/
-
-# Capacitor / web
+# Expo
+.expo/
 dist/
-.capacitor/
+web-build/
+expo-env.d.ts
 
-# Local overrides
-*.local
-
-# Signing secrets (never commit)
+# Native
+.kotlin/
+*.orig.*
 *.jks
-*.keystore
+*.p8
 *.p12
+*.key
 *.mobileprovision
-AuthKey_*.p8
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android

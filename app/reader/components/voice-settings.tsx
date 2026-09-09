@@ -32,7 +32,7 @@ export function VoiceSettings({
       {!browserOk ? (
         <small>Listening needs browser speech voices on this device.</small>
       ) : (
-        <small>Auto switches language when the text language changes.</small>
+        <small>Auto switches language when the paragraph language changes.</small>
       )}
     </label>
   );
