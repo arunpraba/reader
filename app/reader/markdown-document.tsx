@@ -26,6 +26,7 @@ export const MarkdownDocument = memo(function MarkdownDocument({
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
   const lastTapRef = useRef({ time: 0, x: 0, y: 0 });
+  const lastStartRef = useRef(0);
 
   const startAtPoint = useCallback(
     (clientX: number, clientY: number, target: EventTarget | null) => {
@@ -35,6 +36,10 @@ export const MarkdownDocument = memo(function MarkdownDocument({
 
       const ordinal = readPositionFromPoint(block, clientX, clientY);
       if (ordinal == null) return;
+
+      const now = Date.now();
+      if (now - lastStartRef.current < 400) return;
+      lastStartRef.current = now;
 
       onStartAt(Number(block.dataset.readBlock), ordinal);
     },
@@ -50,7 +55,6 @@ export const MarkdownDocument = memo(function MarkdownDocument({
 
   const handlePointerUp = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (event.pointerType === "mouse") return;
       const now = Date.now();
       const last = lastTapRef.current;
       const isDoubleTap =

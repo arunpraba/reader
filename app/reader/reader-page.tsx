@@ -16,8 +16,16 @@ import { MiniPlayer } from "./mini-player";
 
 export function ReaderPage() {
   const settings = useReaderSettings();
-  const { doc, setDoc, editing, setEditing, saveState, save, positionRef } =
-    useReaderDocument();
+  const {
+    doc,
+    setDoc,
+    folderName,
+    editing,
+    setEditing,
+    saveState,
+    save,
+    positionRef,
+  } = useReaderDocument();
   const { voices } = useTtsVoices();
 
   const blocks = useMemo(
@@ -61,6 +69,8 @@ export function ReaderPage() {
     <main className="reader-shell">
       <ReaderTopbar
         title={doc.title}
+        folderId={doc.folderId}
+        folderName={folderName}
         languages={languages}
         saveState={saveState}
         editing={editing}

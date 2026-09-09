@@ -1,4 +1,5 @@
 import { createId } from "./id";
+import { article } from "./article";
 
 export type Folder = { id: string; name: string; createdAt: number };
 export type ReadingPosition = {
@@ -110,8 +111,7 @@ export const storage = {
       id: "welcome-doc",
       folderId: "welcome",
       title: "The quiet power of attention",
-      content:
-        "# The quiet power of attention\n\nReading is not a race. It is a conversation between a page and your attention.\n\nஒரு நல்ல வாசிப்பு மனதை அமைதியாக்கும். Reading across languages should feel natural.\n\n## A small practice\n\n- Read one paragraph slowly.\n- Pause before moving on.\n- Repeat the part you want to remember.",
+      content: article,
       updatedAt: Date.now(),
     } satisfies Doc);
   },

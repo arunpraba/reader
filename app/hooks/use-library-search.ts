@@ -1,21 +1,35 @@
 import { useMemo, useState } from "react";
 import type { Doc, Folder } from "../../lib/storage";
 
+function searchTerms(search: string) {
+  return search.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+}
+
 export function useLibrarySearch(
   docs: Doc[],
   folders: Folder[],
   selected: string | null | "all",
 ) {
   const [search, setSearch] = useState("");
+  const atRoot = selected === "all" || selected === null;
+
+  const visibleFolders = useMemo(() => {
+    if (!atRoot) return [];
+    const terms = searchTerms(search);
+    return folders.filter((folder) => {
+      if (!terms.length) return true;
+      const name = folder.name.toLocaleLowerCase();
+      return terms.every((term) => name.includes(term));
+    });
+  }, [atRoot, folders, search]);
 
   const visible = useMemo(() => {
-    const terms = search
-      .toLocaleLowerCase()
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+    const terms = searchTerms(search);
     return docs
-      .filter((doc) => selected === "all" || doc.folderId === selected)
+      .filter((doc) => {
+        if (atRoot) return terms.length > 0 || doc.folderId === null;
+        return doc.folderId === selected;
+      })
       .map((doc) => {
         const title = doc.title.toLocaleLowerCase();
         const content = doc.content.toLocaleLowerCase();
@@ -41,7 +55,7 @@ export function useLibrarySearch(
       .filter((item) => !terms.length || item.matches)
       .sort((a, b) => b.score - a.score || b.doc.updatedAt - a.doc.updatedAt)
       .map((item) => item.doc);
-  }, [docs, folders, selected, search]);
+  }, [atRoot, docs, folders, selected, search]);
 
-  return { search, setSearch, visible };
+  return { search, setSearch, visible, visibleFolders };
 }

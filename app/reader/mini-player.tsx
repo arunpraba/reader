@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Pause, Play } from "lucide-react";
+import { ChevronUp, Pause, Play } from "lucide-react";
 
 export function MiniPlayer({
   progress,
@@ -24,22 +24,9 @@ export function MiniPlayer({
   const player = (
     <div
       className="mini-player"
-      style={
-        {
-          "--player-progress": `${Math.round(progress * 360)}deg`,
-        } as CSSProperties
-      }
       aria-label="Mini player"
+      data-playing={playing ? "true" : undefined}
     >
-      <button
-        type="button"
-        className="expand-player"
-        onClick={onExpand}
-        aria-label="Expand player"
-        title="Expand player"
-      >
-        <Maximize2 size={10} aria-hidden="true" />
-      </button>
       <button
         type="button"
         className="mini-play"
@@ -47,10 +34,19 @@ export function MiniPlayer({
         aria-label={playing ? "Pause" : "Resume reading"}
       >
         {playing ? (
-          <Pause size={16} aria-hidden="true" fill="currentColor" />
+          <Pause size={18} strokeWidth={2} aria-hidden="true" />
         ) : (
-          <Play size={16} aria-hidden="true" fill="currentColor" />
+          <Play size={18} strokeWidth={2} aria-hidden="true" />
         )}
+      </button>
+      <button
+        type="button"
+        className="expand-player"
+        onClick={onExpand}
+        aria-label="Expand player"
+        title="Expand player"
+      >
+        <ChevronUp size={20} strokeWidth={2} aria-hidden="true" />
       </button>
       <span className="sr-only" aria-live="polite">
         {Math.round(progress * 100)} percent complete

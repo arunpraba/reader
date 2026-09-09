@@ -4,6 +4,7 @@ import { Doc, storage } from "../../../lib/storage";
 
 export function useReaderDocument() {
   const [doc, setDoc] = useState<Doc | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const searchParams = useSearchParams();
@@ -13,11 +14,19 @@ export function useReaderDocument() {
 
   useEffect(() => {
     setEditing(initialEditing);
-    if (docId)
-      storage.doc(docId).then((value) => {
+    if (!docId) return;
+    void Promise.all([storage.doc(docId), storage.folders()]).then(
+      ([value, folders]) => {
         positionRef.current = value?.readingPosition;
         setDoc(value ?? null);
-      });
+        setFolderName(
+          value?.folderId
+            ? (folders.find((folder) => folder.id === value.folderId)?.name ??
+              null)
+            : null,
+        );
+      },
+    );
   }, [docId, initialEditing]);
 
   useEffect(() => {
@@ -47,6 +56,7 @@ export function useReaderDocument() {
   return {
     doc,
     setDoc,
+    folderName,
     editing,
     setEditing,
     saveState,

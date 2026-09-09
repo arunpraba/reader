@@ -18,7 +18,7 @@ export function ReaderControls({
     >
       <header className="controls-header">
         <div>
-          <div className="control-kicker">Listen while you read</div>
+          <div className="control-kicker">Listen</div>
           <h2>Player & settings</h2>
         </div>
         <div className="controls-header-actions">

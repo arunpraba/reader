@@ -94,18 +94,12 @@ export function useLibrary({
     }
   };
 
-  const deleteDoc = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  const deleteDoc = async (id: string) => {
     await storage.deleteDoc(id);
     setDocs((current) => current.filter((doc) => doc.id !== id));
   };
 
-  const deleteFolder = async (id: string, name: string) => {
-    const count = docs.filter((doc) => doc.folderId === id).length;
-    const message = count
-      ? `Delete folder "${name}"? ${count} page(s) will become unfiled.`
-      : `Delete folder "${name}"?`;
-    if (!confirm(message)) return;
+  const deleteFolder = async (id: string) => {
     await storage.deleteFolder(id);
     setFolders((current) => current.filter((folder) => folder.id !== id));
     setDocs((current) =>

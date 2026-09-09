@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { languageNames } from "../../../lib/language-names";
+import { saveSelectedFolder } from "../../../lib/reader-settings";
 
 export function ReaderTopbar({
   title,
+  folderId,
+  folderName,
   languages,
   saveState,
   editing,
@@ -12,6 +15,8 @@ export function ReaderTopbar({
   onOpenSettings,
 }: {
   title: string;
+  folderId: string | null;
+  folderName: string | null;
   languages: string[];
   saveState: "saved" | "saving";
   editing: boolean;
@@ -22,29 +27,40 @@ export function ReaderTopbar({
 }) {
   return (
     <header className="reader-topbar">
-      <Link href="/" className="back-link">
-        <span className="back-link-icon" aria-hidden="true">
-          ←
+      <nav className="reader-breadcrumb" aria-label="Breadcrumb">
+        <Link href="/" onClick={() => saveSelectedFolder("all")}>
+          All files
+        </Link>
+        {folderId && folderName ? (
+          <>
+            <span className="file-breadcrumb-sep" aria-hidden="true">
+              /
+            </span>
+            <Link href="/" onClick={() => saveSelectedFolder(folderId)}>
+              {folderName}
+            </Link>
+          </>
+        ) : null}
+        <span className="file-breadcrumb-sep" aria-hidden="true">
+          /
         </span>
-        <span>Library</span>
-      </Link>
-      <input
-        className="reader-title"
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
-        aria-label="Page title"
-      />
+        <input
+          className="reader-title"
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          aria-label="Page title"
+        />
+      </nav>
       <div className="reader-actions">
         <span
           className="auto-language"
           title="Languages are detected for every paragraph"
         >
-          ◎{" "}
           {languages.map((lang) => languageNames[lang] ?? lang).join(" · ") ||
             "Auto language"}
         </span>
         <span className="autosave-state" aria-live="polite">
-          {saveState === "saving" ? "Saving…" : "✓ Autosaved"}
+          {saveState === "saving" ? "Saving…" : "Saved"}
         </span>
         <button
           className="secondary-button reader-edit-button"

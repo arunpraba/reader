@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
-  FileText,
+  Files,
   Folder,
   FolderPlus,
   Plus,
@@ -36,7 +36,7 @@ export function LibrarySidebar({
           <span className="brand-mark">M</span>
           <span className="brand-copy">
             <strong>Margin</strong>
-            <small>Library</small>
+            <small>All files</small>
           </span>
         </Link>
         <button
@@ -55,12 +55,12 @@ export function LibrarySidebar({
         </button>
       </div>
       <button
-        className={`nav-item ${selected === "all" ? "active" : ""}`}
+        className={`nav-item ${selected === "all" || selected === null ? "active" : ""}`}
         onClick={() => onSelect("all")}
-        title="All pages"
+        title="All files"
       >
-        <FileText className="nav-glyph" aria-hidden="true" size={16} />
-        <span className="nav-item-label">All pages</span>
+        <Files className="nav-glyph" aria-hidden="true" size={16} />
+        <span className="nav-item-label">All files</span>
       </button>
       <div className="nav-label">
         <span className="nav-label-text">Folders</span>
@@ -88,18 +88,20 @@ export function LibrarySidebar({
                 {docs.filter((doc) => doc.folderId === folder.id).length}
               </small>
             </button>
-            <button
-              type="button"
-              className="item-delete"
-              onClick={() => onDeleteFolder(folder.id, folder.name)}
-              aria-label={`Delete folder ${folder.name}`}
-              title={`Delete folder ${folder.name}`}
-            >
-              <Trash2 size={14} aria-hidden="true" />
-            </button>
+            {!sidebarCollapsed && (
+              <button
+                type="button"
+                className="item-delete"
+                onClick={() => onDeleteFolder(folder.id, folder.name)}
+                aria-label={`Delete folder ${folder.name}`}
+                title={`Delete folder ${folder.name}`}
+              >
+                <Trash2 size={14} aria-hidden="true" />
+              </button>
+            )}
           </div>
         ))}
-        {folders.length === 0 && (
+        {!sidebarCollapsed && folders.length === 0 && (
           <button
             type="button"
             className="folder-empty-hint"
@@ -110,12 +112,14 @@ export function LibrarySidebar({
           </button>
         )}
       </nav>
-      <div className="local-note">
-        <div>
-          <strong>On this device</strong>
-          <small>Stored in this browser.</small>
+      {!sidebarCollapsed && (
+        <div className="local-note">
+          <div>
+            <strong>On this device</strong>
+            <small>Stored in this browser.</small>
+          </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 }
