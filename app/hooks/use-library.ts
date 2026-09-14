@@ -9,6 +9,31 @@ import { exportLibrary } from "../../lib/export-library";
 import { createId } from "../../lib/id";
 import { Doc, Folder, storage } from "../../lib/storage";
 
+const IMPORT_EXT = /\.(md|markdown|txt)$/i;
+const SKIP_DIR = new Set(["node_modules", "__MACOSX"]);
+
+function isImportablePath(relativePath: string) {
+  const segments = relativePath.split("/").filter(Boolean);
+  if (segments.length === 0) return false;
+  if (segments.some((part) => part.startsWith(".") || SKIP_DIR.has(part))) {
+    return false;
+  }
+  return IMPORT_EXT.test(segments[segments.length - 1]);
+}
+
+function uniqueFolderName(base: string, taken: Set<string>) {
+  const key = (name: string) => name.toLowerCase();
+  if (!taken.has(key(base))) {
+    taken.add(key(base));
+    return base;
+  }
+  let n = 2;
+  while (taken.has(key(`${base} (${n})`))) n += 1;
+  const name = `${base} (${n})`;
+  taken.add(key(name));
+  return name;
+}
+
 async function loadLibrary() {
   await storage.seed();
   const [folderList, docList] = await Promise.all([
@@ -42,6 +67,7 @@ export function useLibrary({
   const [importLink, setImportLink] = useState("");
   const [importingLink, setImportingLink] = useState(false);
   const [importLinkError, setImportLinkError] = useState("");
+  const [importNotice, setImportNotice] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -134,18 +160,90 @@ export function useLibrary({
     router.push(`/reader/?id=${doc.id}`);
   };
 
-  const importFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      await saveImportedDoc(
-        file.name.replace(/\.(md|markdown|txt)$/i, ""),
-        String(reader.result ?? ""),
-      );
-    };
-    reader.readAsText(file);
+  const importFolder = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = [...(event.target.files ?? [])];
     event.target.value = "";
+    event.currentTarget.closest("details")?.removeAttribute("open");
+    if (files.length === 0) return;
+
+    const usable = files.filter((file) =>
+      isImportablePath(file.webkitRelativePath || file.name),
+    );
+    if (usable.length === 0) {
+      setImportNotice("No Markdown or text files in that folder.");
+      return;
+    }
+    setImportNotice("");
+
+    const groups = new Map<string, File[]>();
+    for (const file of usable) {
+      const relative = file.webkitRelativePath || file.name;
+      const dir = relative.split("/").slice(0, -1).join(" / ");
+      const group = groups.get(dir) ?? [];
+      group.push(file);
+      groups.set(dir, group);
+    }
+
+    const taken = new Set(folders.map((folder) => folder.name.toLowerCase()));
+    const createdFolders: Folder[] = [];
+    const createdDocs: Doc[] = [];
+    let stamp = Date.now() + usable.length;
+
+    for (const dir of [...groups.keys()].sort((a, b) => a.localeCompare(b))) {
+      const folder = await storage.folder(uniqueFolderName(dir, taken));
+      createdFolders.push(folder);
+      for (const file of groups.get(dir) ?? []) {
+        stamp -= 1;
+        const doc: Doc = {
+          id: createId(),
+          folderId: folder.id,
+          title: file.name.replace(/\.(md|markdown|txt)$/i, "") || "Untitled",
+          content: await file.text(),
+          updatedAt: stamp,
+        };
+        await storage.save(doc);
+        createdDocs.push(doc);
+      }
+    }
+
+    setFolders((current) =>
+      [...current, ...createdFolders].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
+    );
+    setDocs((current) =>
+      [...createdDocs, ...current].sort((a, b) => b.updatedAt - a.updatedAt),
+    );
+    setSelected(createdFolders.length === 1 ? createdFolders[0].id : "all");
+  };
+
+  const importFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = "";
+    setImportNotice("");
+    if (files.length === 0) return;
+
+    const imported = await Promise.all(
+      files.map(async (file, index) => {
+        const content = await file.text();
+        const doc: Doc = {
+          id: createId(),
+          folderId: selected === "all" ? null : selected,
+          title: file.name.replace(/\.(md|markdown|txt)$/i, "") || "Untitled",
+          content,
+          updatedAt: Date.now() + (files.length - index),
+        };
+        await storage.save(doc);
+        return doc;
+      }),
+    );
+
+    setDocs((current) =>
+      [...imported, ...current].sort((a, b) => b.updatedAt - a.updatedAt),
+    );
+    if (imported.length === 1) {
+      router.push(`/reader/?id=${imported[0].id}`);
+    }
   };
 
   const importFromLink = async (rawLink: string) => {
@@ -198,7 +296,10 @@ export function useLibrary({
     deleteDoc,
     deleteFolder,
     createDoc,
+    importNotice,
+    setImportNotice,
     importFile,
+    importFolder,
     importFromLink,
     handleImportLinkPaste,
     handleExportLibrary,

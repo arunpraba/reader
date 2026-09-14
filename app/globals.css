@@ -142,9 +142,13 @@
     background-color 0.28s ease,
     color 0.28s ease;
 }
+.mermaid-frame {
+  position: relative;
+  margin: 16px 0;
+}
 .mermaid-diagram {
   overflow: auto;
-  margin: 16px 0;
+  margin: 0;
   padding: 16px;
   background: var(--mermaid-bg);
   border: 1px solid var(--mermaid-border);
@@ -153,6 +157,136 @@
 .mermaid-diagram svg {
   max-width: 100%;
   height: auto;
+}
+.mermaid-zoom {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--focus, var(--accent));
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--focus, var(--accent));
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: 0 2px 8px var(--shadow-soft);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.mermaid-zoom:hover {
+  background: var(--control-bg);
+  color: var(--ink);
+}
+.mermaid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in oklab, var(--bg) 92%, oklch(0 0 0));
+  backdrop-filter: blur(10px);
+  padding: max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  animation: mermaid-lightbox-enter 0.22s ease;
+}
+.mermaid-lightbox-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+.mermaid-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 2px;
+}
+.mermaid-zoom-level {
+  min-width: 3.75rem;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.mermaid-lightbox-tool,
+.mermaid-lightbox-close {
+  position: static;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.mermaid-zoom-controls .mermaid-lightbox-tool {
+  border: 0;
+  background: transparent;
+}
+.mermaid-lightbox-tool:hover:not(:disabled),
+.mermaid-lightbox-close:hover {
+  background: var(--control-bg);
+  color: var(--ink);
+}
+.mermaid-lightbox-tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.mermaid-lightbox-close {
+  color: var(--muted);
+}
+.mermaid-lightbox-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 10px;
+  background: var(--mermaid-bg);
+  border: 1px solid var(--mermaid-border);
+  padding: 24px;
+}
+.mermaid-diagram-expanded {
+  border: 0;
+  background: transparent;
+  min-height: 100%;
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  zoom: var(--mermaid-zoom, 1);
+}
+.mermaid-diagram-expanded svg {
+  max-width: min(100vw - 80px, 1040px) !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0;
+}
+@keyframes mermaid-lightbox-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mermaid-lightbox {
+    animation: none;
+  }
 }
 .mermaid-error {
   border: 1px solid var(--danger);
@@ -1591,6 +1725,9 @@ a {
   font-size: 12px;
   color: var(--danger);
   text-align: left;
+}
+.library-content > .import-link-error {
+  margin-bottom: 12px;
 }
 .file-browser-toolbar {
   display: flex;

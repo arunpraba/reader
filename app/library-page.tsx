@@ -99,6 +99,7 @@ export function LibraryPage() {
           onClearSearch={() => setSearch("")}
           onExport={library.handleExportLibrary}
           onImportFile={library.importFile}
+          onImportFolder={library.importFolder}
           onCreateDoc={() => void library.createDoc()}
           onCreateFolder={library.startFolderCreate}
           onImportLink={() => {
@@ -108,6 +109,11 @@ export function LibraryPage() {
           }}
         />
         <div className="library-content">
+          {library.importNotice ? (
+            <p className="import-link-error" role="status">
+              {library.importNotice}
+            </p>
+          ) : null}
           <FileBrowser
             view={view}
             onViewChange={setView}

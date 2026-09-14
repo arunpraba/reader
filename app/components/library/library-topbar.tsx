@@ -6,6 +6,7 @@ import {
   Download,
   Ellipsis,
   FileText,
+  FolderInput,
   FolderPlus,
   Link2,
   MonitorDown,
@@ -28,6 +29,7 @@ export function LibraryTopbar({
   onClearSearch,
   onExport,
   onImportFile,
+  onImportFolder,
   onCreateDoc,
   onCreateFolder,
   onImportLink,
@@ -38,6 +40,7 @@ export function LibraryTopbar({
   onClearSearch: () => void;
   onExport: () => void;
   onImportFile: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onImportFolder: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onCreateDoc: () => void;
   onCreateFolder: () => void;
   onImportLink: () => void;
@@ -96,11 +99,25 @@ export function LibraryTopbar({
             </button>
             <label className="top-more-item">
               <Upload size={15} aria-hidden="true" />
-              Import file
+              Import files
               <input
                 type="file"
                 accept=".md,.markdown,.txt"
+                multiple
                 onChange={onImportFile}
+              />
+            </label>
+            <label className="top-more-item">
+              <FolderInput size={15} aria-hidden="true" />
+              Import folder
+              <input
+                type="file"
+                multiple
+                ref={(node) => {
+                  node?.setAttribute("webkitdirectory", "");
+                  node?.setAttribute("directory", "");
+                }}
+                onChange={onImportFolder}
               />
             </label>
             <button
