@@ -1468,6 +1468,39 @@ a {
   opacity: 0.45;
   cursor: not-allowed;
 }
+.folder-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  overflow: auto;
+  margin-bottom: 16px;
+}
+.folder-picker button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+.folder-picker button:hover:not(:disabled) {
+  background: var(--control-bg);
+}
+.folder-picker button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.folder-picker small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
 .folder-modal-copy {
   margin: 0 0 16px;
   font-size: 14px;

@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { Ellipsis, FileText, Folder, LayoutGrid, List, Plus } from "lucide-react";
+import {
+  Ellipsis,
+  FileText,
+  Folder,
+  LayoutGrid,
+  List,
+  Plus,
+} from "lucide-react";
 import type { Doc, Folder as FolderType } from "../../../lib/storage";
 
 export type FileView = "list" | "grid";
@@ -16,11 +23,13 @@ function ItemMenu({
   name,
   href,
   onOpen,
+  onMove,
   onDelete,
 }: {
   name: string;
   href?: string;
   onOpen?: () => void;
+  onMove?: () => void;
   onDelete: () => void;
 }) {
   return (
@@ -38,6 +47,18 @@ function ItemMenu({
             Open
           </button>
         )}
+        {onMove ? (
+          <button
+            type="button"
+            className="top-more-item"
+            onClick={(event) => {
+              event.currentTarget.closest("details")?.removeAttribute("open");
+              onMove();
+            }}
+          >
+            Move to folder
+          </button>
+        ) : null}
         <button
           type="button"
           className="top-more-item file-item-delete"
@@ -64,6 +85,7 @@ export function FileBrowser({
   onSelect,
   onDeleteFolder,
   onDeleteDoc,
+  onMoveDoc,
   onCreateDoc,
 }: {
   view: FileView;
@@ -76,6 +98,7 @@ export function FileBrowser({
   onSelect: (id: string | null | "all") => void;
   onDeleteFolder: (id: string, name: string) => void;
   onDeleteDoc: (id: string, title: string) => void;
+  onMoveDoc: (id: string, title: string, folderId: string | null) => void;
   onCreateDoc: () => void;
 }) {
   const atRoot = selected === "all" || selected === null;
@@ -105,11 +128,7 @@ export function FileBrowser({
             {total} {total === 1 ? "item" : "items"}
           </small>
         </nav>
-        <div
-          className="view-toggle"
-          role="group"
-          aria-label="Library view"
-        >
+        <div className="view-toggle" role="group" aria-label="Library view">
           <button
             type="button"
             className={view === "list" ? "active" : undefined}
@@ -143,7 +162,11 @@ export function FileBrowser({
                 : "This folder is empty"}
           </p>
           {!search ? (
-            <button type="button" className="primary-button" onClick={onCreateDoc}>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={onCreateDoc}
+            >
               <Plus size={15} aria-hidden="true" />
               Create
             </button>
@@ -167,7 +190,10 @@ export function FileBrowser({
                   <Folder size={18} />
                 </span>
                 <span className="file-name">{folder.name}</span>
-                <time className="file-date" dateTime={new Date(folder.createdAt).toISOString()}>
+                <time
+                  className="file-date"
+                  dateTime={new Date(folder.createdAt).toISOString()}
+                >
                   {formatDate(folder.createdAt)}
                 </time>
               </button>
@@ -185,7 +211,10 @@ export function FileBrowser({
                   <FileText size={18} />
                 </span>
                 <span className="file-name">{doc.title}</span>
-                <time className="file-date" dateTime={new Date(doc.updatedAt).toISOString()}>
+                <time
+                  className="file-date"
+                  dateTime={new Date(doc.updatedAt).toISOString()}
+                >
                   {formatDate(doc.updatedAt)}
                 </time>
               </Link>
@@ -193,6 +222,7 @@ export function FileBrowser({
                 name={doc.title}
                 href={`/reader/?id=${doc.id}`}
                 onDelete={() => onDeleteDoc(doc.id, doc.title)}
+                onMove={() => onMoveDoc(doc.id, doc.title, doc.folderId)}
               />
             </div>
           ))}
@@ -215,7 +245,10 @@ export function FileBrowser({
                   <Folder size={28} />
                 </span>
                 <strong className="file-name">{folder.name}</strong>
-                <time className="file-date" dateTime={new Date(folder.createdAt).toISOString()}>
+                <time
+                  className="file-date"
+                  dateTime={new Date(folder.createdAt).toISOString()}
+                >
                   {formatDate(folder.createdAt)}
                 </time>
               </button>
@@ -227,13 +260,17 @@ export function FileBrowser({
                 name={doc.title}
                 href={`/reader/?id=${doc.id}`}
                 onDelete={() => onDeleteDoc(doc.id, doc.title)}
+                onMove={() => onMoveDoc(doc.id, doc.title, doc.folderId)}
               />
               <Link href={`/reader/?id=${doc.id}`} className="file-tile-main">
                 <span className="file-icon file-icon-page" aria-hidden="true">
                   <FileText size={28} />
                 </span>
                 <strong className="file-name">{doc.title}</strong>
-                <time className="file-date" dateTime={new Date(doc.updatedAt).toISOString()}>
+                <time
+                  className="file-date"
+                  dateTime={new Date(doc.updatedAt).toISOString()}
+                >
                   {formatDate(doc.updatedAt)}
                 </time>
               </Link>

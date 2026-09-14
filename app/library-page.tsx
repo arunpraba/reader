@@ -5,6 +5,7 @@ import { ConfirmModal } from "./components/library/confirm-modal";
 import { FileBrowser, type FileView } from "./components/library/file-browser";
 import { FolderCreateModal } from "./components/library/folder-create-modal";
 import { ImportLinkModal } from "./components/library/import-link-modal";
+import { MoveFolderModal } from "./components/library/move-folder-modal";
 import { LibrarySidebar } from "./components/library/library-sidebar";
 import { LibraryTopbar } from "./components/library/library-topbar";
 import { useLibrary } from "./hooks/use-library";
@@ -21,6 +22,11 @@ export function LibraryPage() {
     | { type: "folder"; id: string; name: string }
     | null
   >(null);
+  const [pendingMove, setPendingMove] = useState<{
+    id: string;
+    title: string;
+    folderId: string | null;
+  } | null>(null);
   const {
     selected,
     setSelected,
@@ -127,10 +133,25 @@ export function LibraryPage() {
             onDeleteDoc={(id, title) =>
               setPendingDelete({ type: "doc", id, name: title })
             }
+            onMoveDoc={(id, title, folderId) =>
+              setPendingMove({ id, title, folderId })
+            }
             onCreateDoc={() => void library.createDoc()}
           />
         </div>
       </section>
+      <MoveFolderModal
+        open={pendingMove !== null}
+        title={pendingMove?.title ?? ""}
+        folders={library.folders}
+        currentFolderId={pendingMove?.folderId ?? null}
+        onCancel={() => setPendingMove(null)}
+        onMove={(folderId) => {
+          if (!pendingMove) return;
+          void library.moveDoc(pendingMove.id, folderId);
+          setPendingMove(null);
+        }}
+      />
       <ConfirmModal
         open={pendingDelete !== null}
         title={

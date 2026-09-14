@@ -125,6 +125,16 @@ export function useLibrary({
     setDocs((current) => current.filter((doc) => doc.id !== id));
   };
 
+  const moveDoc = async (id: string, folderId: string | null) => {
+    const doc = docs.find((item) => item.id === id);
+    if (!doc || doc.folderId === folderId) return;
+    const next = { ...doc, folderId };
+    await storage.save(next);
+    setDocs((current) =>
+      current.map((item) => (item.id === id ? next : item)),
+    );
+  };
+
   const deleteFolder = async (id: string) => {
     await storage.deleteFolder(id);
     setFolders((current) => current.filter((folder) => folder.id !== id));
@@ -294,6 +304,7 @@ export function useLibrary({
     startFolderCreate,
     createFolder,
     deleteDoc,
+    moveDoc,
     deleteFolder,
     createDoc,
     importNotice,
