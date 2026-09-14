@@ -4,6 +4,7 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { detectParagraphLanguage } from "./detect-language";
 import { splitSentences } from "./split-sentences";
+import { stripParentheticals } from "./strip-parentheticals";
 
 export { detectLanguage, detectParagraphLanguage } from "./detect-language";
 
@@ -81,7 +82,12 @@ function resolveNumericLanguage(prev?: Word, next?: Word) {
   return prevLang ?? nextLang ?? "en-US";
 }
 
-export function parseMarkdown(content: string): Block[] {
+export function parseMarkdown(
+  content: string,
+  options?: { skipParentheticals?: boolean },
+): Block[] {
+  const speak = (value: string) =>
+    options?.skipParentheticals ? stripParentheticals(value) : value;
   const tree = unified()
     .use(remarkParse)
     .use(remarkGfm)
@@ -116,14 +122,14 @@ export function parseMarkdown(content: string): Block[] {
           ? (node.children ?? [])
               .map((row) =>
                 (row.children ?? [])
-                  .map((cell) => nodeReadableText(cell))
+                  .map((cell) => speak(nodeReadableText(cell)))
                   .filter(Boolean)
                   .join("; "),
               )
               .filter(Boolean)
               .join(". ")
           : "";
-      const text = (tableText || nodeReadableText(node))
+      const text = speak(tableText || nodeReadableText(node))
         .replace(/\s+/g, " ")
         .trim();
       const sentenceTexts =
@@ -133,7 +139,7 @@ export function parseMarkdown(content: string): Block[] {
             : []
           : type === "list"
             ? (node.children ?? [])
-                .map((item) => nodeReadableText(item))
+                .map((item) => speak(nodeReadableText(item)))
                 .filter(Boolean)
                 .flatMap((item) => splitSentences(item))
             : splitSentences(text);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type MutableRefObject } from "react";
-import type { Word } from "../../../lib/reader";
-import { Doc, storage } from "../../../lib/storage";
+import type { Word } from "@/lib/reader";
+import { Doc, storage } from "@/lib/storage";
 import { usePlayback } from "../../playback-provider";
 
 type ReaderSettingsSlice = {

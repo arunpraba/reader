@@ -23,6 +23,7 @@ export function ReaderSettingsPanel({
   sentenceGap,
   paragraphGap,
   pauseEnabled,
+  skipParentheticals,
   wordRepeats,
   sentenceRepeats,
   paragraphRepeats,
@@ -38,6 +39,7 @@ export function ReaderSettingsPanel({
   onSentenceGapChange,
   onParagraphGapChange,
   onPauseEnabledChange,
+  onSkipParentheticalsChange,
   onWordRepeatsChange,
   onSentenceRepeatsChange,
   onParagraphRepeatsChange,
@@ -61,6 +63,7 @@ export function ReaderSettingsPanel({
   sentenceGap: number;
   paragraphGap: number;
   pauseEnabled: { word: boolean; sentence: boolean; paragraph: boolean };
+  skipParentheticals: boolean;
   wordRepeats: number;
   sentenceRepeats: number;
   paragraphRepeats: number;
@@ -85,6 +88,7 @@ export function ReaderSettingsPanel({
     level: "word" | "sentence" | "paragraph",
     enabled: boolean,
   ) => void;
+  onSkipParentheticalsChange: (enabled: boolean) => void;
   onWordRepeatsChange: (value: number) => void;
   onSentenceRepeatsChange: (value: number) => void;
   onParagraphRepeatsChange: (value: number) => void;
@@ -124,10 +128,12 @@ export function ReaderSettingsPanel({
         sentenceGap={sentenceGap}
         paragraphGap={paragraphGap}
         pauseEnabled={pauseEnabled}
+        skipParentheticals={skipParentheticals}
         onWordGapChange={onWordGapChange}
         onSentenceGapChange={onSentenceGapChange}
         onParagraphGapChange={onParagraphGapChange}
         onPauseEnabledChange={onPauseEnabledChange}
+        onSkipParentheticalsChange={onSkipParentheticalsChange}
       />
       <RereadSettings
         wordRepeats={wordRepeats}

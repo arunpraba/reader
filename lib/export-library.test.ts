@@ -21,6 +21,16 @@ describe("buildExportPaths", () => {
     assert.deepEqual(paths, ["Notes/Hello-abc123.md"]);
   });
 
+  it("nests paths from parentId", () => {
+    const paths = buildExportPaths(
+      [
+        { id: "notes", name: "Notes", parentId: null },
+        { id: "drafts", name: "drafts", parentId: "notes" },
+      ],
+      [{ id: "abc12345", folderId: "drafts", title: "Hello" }],
+    );
+    assert.deepEqual(paths, ["Notes/drafts/Hello-abc123.md"]);
+  });
   it("uses Root for unfiled docs", () => {
     const paths = buildExportPaths(
       [],

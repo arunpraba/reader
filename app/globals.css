@@ -1811,6 +1811,21 @@ a {
   overflow: hidden;
   background: var(--surface);
 }
+.file-browser-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.library-sort {
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  padding: 0 8px;
+}
 .view-toggle button {
   width: 36px;
   height: 32px;
@@ -2311,6 +2326,14 @@ a {
 .gap-group h3 {
   font-size: 11px;
   margin: 0 0 8px;
+}
+.skip-parens-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
 }
 .repeat-control {
   border-top: 1px solid var(--line);

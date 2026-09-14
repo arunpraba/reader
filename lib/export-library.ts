@@ -10,24 +10,41 @@ export function safeExportName(name: string) {
   );
 }
 
+function folderExportPath(
+  folders: { id: string; name: string; parentId?: string | null }[],
+  folderId: string | null,
+) {
+  if (!folderId) return "Root";
+  const byId = new Map(folders.map((folder) => [folder.id, folder]));
+  const names: string[] = [];
+  const seen = new Set<string>();
+  let current = byId.get(folderId);
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    names.push(safeExportName(current.name));
+    current = current.parentId ? byId.get(current.parentId) : undefined;
+  }
+  if (!names.length) return "Root";
+  return names.reverse().join("/");
+}
+
 export function buildExportPaths(
-  folders: { id: string; name: string }[],
+  folders: { id: string; name: string; parentId?: string | null }[],
   docs: { id: string; folderId: string | null; title: string }[],
 ) {
-  return docs.map((doc) => {
-    const folder = folders.find((item) => item.id === doc.folderId);
-    return `${folder ? safeExportName(folder.name) : "Root"}/${safeExportName(doc.title)}-${doc.id.slice(0, 6)}.md`;
-  });
+  return docs.map(
+    (doc) =>
+      `${folderExportPath(folders, doc.folderId)}/${safeExportName(doc.title)}-${doc.id.slice(0, 6)}.md`,
+  );
 }
 
 export function exportLibrary(folders: Folder[], docs: Doc[]) {
   const files: Record<string, Uint8Array> = {};
   folders.forEach((folder) => {
-    files[`${safeExportName(folder.name)}/.keep`] = strToU8("");
+    files[`${folderExportPath(folders, folder.id)}/.keep`] = strToU8("");
   });
   docs.forEach((doc) => {
-    const folder = folders.find((item) => item.id === doc.folderId);
-    const path = `${folder ? safeExportName(folder.name) : "Root"}/${safeExportName(doc.title)}-${doc.id.slice(0, 6)}.md`;
+    const path = `${folderExportPath(folders, doc.folderId)}/${safeExportName(doc.title)}-${doc.id.slice(0, 6)}.md`;
     files[path] = strToU8(doc.content);
   });
   files["margin-library.json"] = strToU8(

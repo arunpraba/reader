@@ -4,10 +4,15 @@ import {
   fetchImportFromUrl,
   ImportUrlError,
   isImportUrl,
-} from "../../lib/import-url";
-import { exportLibrary } from "../../lib/export-library";
-import { createId } from "../../lib/id";
-import { Doc, Folder, storage } from "../../lib/storage";
+} from "@/lib/import-url";
+import { exportLibrary } from "@/lib/export-library";
+import {
+  planFolderChain,
+  repairSlashFolders,
+  subtreeIds,
+} from "@/lib/folder-tree";
+import { createId } from "@/lib/id";
+import { Doc, Folder, storage } from "@/lib/storage";
 
 const IMPORT_EXT = /\.(md|markdown|txt)$/i;
 const SKIP_DIR = new Set(["node_modules", "__MACOSX"]);
@@ -21,27 +26,18 @@ function isImportablePath(relativePath: string) {
   return IMPORT_EXT.test(segments[segments.length - 1]);
 }
 
-function uniqueFolderName(base: string, taken: Set<string>) {
-  const key = (name: string) => name.toLowerCase();
-  if (!taken.has(key(base))) {
-    taken.add(key(base));
-    return base;
-  }
-  let n = 2;
-  while (taken.has(key(`${base} (${n})`))) n += 1;
-  const name = `${base} (${n})`;
-  taken.add(key(name));
-  return name;
-}
-
 async function loadLibrary() {
   await storage.seed();
   const [folderList, docList] = await Promise.all([
     storage.folders(),
     storage.docs(),
   ]);
+  const repaired = repairSlashFolders(folderList, createId);
+  if (repaired.upserts.length) {
+    await Promise.all(repaired.upserts.map((folder) => storage.saveFolder(folder)));
+  }
   return {
-    folders: folderList.sort((a, b) => a.name.localeCompare(b.name)),
+    folders: repaired.folders.sort((a, b) => a.name.localeCompare(b.name)),
     docs: docList.sort((a, b) => b.updatedAt - a.updatedAt),
   };
 }
@@ -109,7 +105,10 @@ export function useLibrary({
     if (savingFolderRef.current) return;
     savingFolderRef.current = true;
     try {
-      const folder = await storage.folder(name);
+      const folder = await storage.folder(
+        name,
+        selected === "all" || selected === null ? null : selected,
+      );
       setFolders((current) =>
         [...current, folder].sort((a, b) => a.name.localeCompare(b.name)),
       );
@@ -136,14 +135,19 @@ export function useLibrary({
   };
 
   const deleteFolder = async (id: string) => {
+    const ids = subtreeIds(folders, id);
     await storage.deleteFolder(id);
-    setFolders((current) => current.filter((folder) => folder.id !== id));
+    setFolders((current) => current.filter((folder) => !ids.has(folder.id)));
     setDocs((current) =>
       current.map((doc) =>
-        doc.folderId === id ? { ...doc, folderId: null } : doc,
+        doc.folderId && ids.has(doc.folderId)
+          ? { ...doc, folderId: null }
+          : doc,
       ),
     );
-    if (selected === id) setSelected("all");
+    if (selected !== "all" && selected !== null && ids.has(selected)) {
+      setSelected("all");
+    }
   };
 
   const createDoc = async () => {
@@ -185,35 +189,36 @@ export function useLibrary({
     }
     setImportNotice("");
 
-    const groups = new Map<string, File[]>();
-    for (const file of usable) {
-      const relative = file.webkitRelativePath || file.name;
-      const dir = relative.split("/").slice(0, -1).join(" / ");
-      const group = groups.get(dir) ?? [];
-      group.push(file);
-      groups.set(dir, group);
-    }
-
-    const taken = new Set(folders.map((folder) => folder.name.toLowerCase()));
     const createdFolders: Folder[] = [];
     const createdDocs: Doc[] = [];
+    const importedRoots = new Set<string>();
+    let working = [...folders];
     let stamp = Date.now() + usable.length;
 
-    for (const dir of [...groups.keys()].sort((a, b) => a.localeCompare(b))) {
-      const folder = await storage.folder(uniqueFolderName(dir, taken));
-      createdFolders.push(folder);
-      for (const file of groups.get(dir) ?? []) {
-        stamp -= 1;
-        const doc: Doc = {
-          id: createId(),
-          folderId: folder.id,
-          title: file.name.replace(/\.(md|markdown|txt)$/i, "") || "Untitled",
-          content: await file.text(),
-          updatedAt: stamp,
-        };
-        await storage.save(doc);
-        createdDocs.push(doc);
+    for (const file of usable) {
+      const relative = file.webkitRelativePath || file.name;
+      const segments = relative.split("/").slice(0, -1).filter(Boolean);
+      const planned = segments.length
+        ? planFolderChain(working, segments, createId, stamp)
+        : null;
+      if (planned) {
+        working = planned.folders;
+        for (const folder of planned.created) {
+          await storage.saveFolder(folder);
+          createdFolders.push(folder);
+        }
+        importedRoots.add(planned.rootId);
       }
+      stamp -= 1;
+      const doc: Doc = {
+        id: createId(),
+        folderId: planned?.leafId ?? (selected === "all" ? null : selected),
+        title: file.name.replace(/\.(md|markdown|txt)$/i, "") || "Untitled",
+        content: await file.text(),
+        updatedAt: stamp,
+      };
+      await storage.save(doc);
+      createdDocs.push(doc);
     }
 
     setFolders((current) =>
@@ -224,7 +229,7 @@ export function useLibrary({
     setDocs((current) =>
       [...createdDocs, ...current].sort((a, b) => b.updatedAt - a.updatedAt),
     );
-    setSelected(createdFolders.length === 1 ? createdFolders[0].id : "all");
+    setSelected(importedRoots.size === 1 ? [...importedRoots][0] : "all");
   };
 
   const importFile = async (event: React.ChangeEvent<HTMLInputElement>) => {

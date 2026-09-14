@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import type { HighlightLevels } from "../../../lib/reader";
+import type { HighlightLevels } from "@/lib/reader";
 import {
   defaultReaderSettings,
   loadReaderSettings,
   saveReaderSettings,
   type ReaderSettings,
-} from "../../../lib/reader-settings";
+} from "@/lib/reader-settings";
 
 export function useReaderSettings() {
   const [levels, setLevels] = useState<HighlightLevels>(
@@ -50,6 +50,9 @@ export function useReaderSettings() {
   const [letterSpacing, setLetterSpacing] = useState(
     defaultReaderSettings.letterSpacing,
   );
+  const [skipParentheticals, setSkipParentheticals] = useState(
+    defaultReaderSettings.skipParentheticals,
+  );
   const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
@@ -68,6 +71,7 @@ export function useReaderSettings() {
     setFontSize(saved.fontSize);
     setLineHeight(saved.lineHeight);
     setLetterSpacing(saved.letterSpacing);
+    setSkipParentheticals(saved.skipParentheticals);
     setSettingsOpen(saved.settingsOpen);
     setMinimized(saved.playerMinimized);
     setSettingsReady(true);
@@ -90,6 +94,7 @@ export function useReaderSettings() {
       fontSize,
       lineHeight,
       letterSpacing,
+      skipParentheticals,
       settingsOpen,
       playerMinimized: minimized,
     };
@@ -110,6 +115,7 @@ export function useReaderSettings() {
     fontSize,
     lineHeight,
     letterSpacing,
+    skipParentheticals,
     settingsOpen,
     minimized,
   ]);
@@ -172,6 +178,8 @@ export function useReaderSettings() {
     fontSize,
     lineHeight,
     letterSpacing,
+    skipParentheticals,
+    setSkipParentheticals,
     setPlayerMinimized,
     setHighlightColor,
     setTypography,

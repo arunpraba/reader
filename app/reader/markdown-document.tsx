@@ -11,9 +11,9 @@ import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import { readPositionFromPoint } from "../../lib/read-position";
+import { readPositionFromPoint } from "@/lib/read-position";
 import { markdownComponents } from "./markdown-components";
-import { rehypeReadingBlocks } from "../../lib/rehype-reading-blocks";
+import { rehypeReadingBlocks } from "@/lib/rehype-reading-blocks";
 
 const remarkPlugins = [remarkGfm, remarkMath];
 const rehypePlugins = [rehypeKatex, rehypeReadingBlocks];

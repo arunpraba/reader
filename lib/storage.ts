@@ -1,7 +1,13 @@
 import { createId } from "./id";
 import { article } from "./article";
+import { subtreeIds } from "./folder-tree";
 
-export type Folder = { id: string; name: string; createdAt: number };
+export type Folder = {
+  id: string;
+  name: string;
+  createdAt: number;
+  parentId?: string | null;
+};
 export type ReadingPosition = {
   blockIndex: number;
   sentenceIndex: number;
@@ -77,25 +83,29 @@ async function remove(storeName: "folders" | "docs", id: string) {
 export const storage = {
   folders: () => all<Folder>("folders"),
   docs: () => all<Doc>("docs"),
-  async folder(name: string) {
+  async folder(name: string, parentId: string | null = null) {
     const folder: Folder = {
       id: createId(),
       name,
+      parentId,
       createdAt: Date.now(),
     };
     await put("folders", folder);
     return folder;
   },
+  saveFolder: (folder: Folder) => put("folders", folder),
   save: (doc: Doc) => put("docs", doc),
   deleteDoc: (id: string) => remove("docs", id),
   async deleteFolder(id: string) {
+    const folders = await all<Folder>("folders");
+    const ids = subtreeIds(folders, id);
     const docs = await all<Doc>("docs");
     await Promise.all(
       docs
-        .filter((doc) => doc.folderId === id)
+        .filter((doc) => doc.folderId && ids.has(doc.folderId))
         .map((doc) => put("docs", { ...doc, folderId: null })),
     );
-    await remove("folders", id);
+    await Promise.all([...ids].map((folderId) => remove("folders", folderId)));
   },
   async doc(id: string) {
     return (await all<Doc>("docs")).find((doc) => doc.id === id);

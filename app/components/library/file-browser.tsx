@@ -7,7 +7,9 @@ import {
   List,
   Plus,
 } from "lucide-react";
-import type { Doc, Folder as FolderType } from "../../../lib/storage";
+import type { Doc, Folder as FolderType } from "@/lib/storage";
+import type { LibraryItem } from "../../hooks/use-library-search";
+import type { LibrarySort } from "@/lib/reader-settings";
 
 export type FileView = "list" | "grid";
 
@@ -78,10 +80,11 @@ export function FileBrowser({
   view,
   onViewChange,
   search,
+  sort,
+  onSortChange,
   selected,
-  folderName,
-  folders,
-  docs,
+  trail,
+  items,
   onSelect,
   onDeleteFolder,
   onDeleteDoc,
@@ -91,10 +94,11 @@ export function FileBrowser({
   view: FileView;
   onViewChange: (view: FileView) => void;
   search: string;
+  sort: LibrarySort;
+  onSortChange: (sort: LibrarySort) => void;
   selected: string | null | "all";
-  folderName?: string;
-  folders: FolderType[];
-  docs: Doc[];
+  trail: FolderType[];
+  items: LibraryItem[];
   onSelect: (id: string | null | "all") => void;
   onDeleteFolder: (id: string, name: string) => void;
   onDeleteDoc: (id: string, title: string) => void;
@@ -102,7 +106,7 @@ export function FileBrowser({
   onCreateDoc: () => void;
 }) {
   const atRoot = selected === "all" || selected === null;
-  const total = folders.length + docs.length;
+  const total = items.length;
   const empty = total === 0;
 
   return (
@@ -118,37 +122,62 @@ export function FileBrowser({
               <button type="button" onClick={() => onSelect("all")}>
                 All files
               </button>
-              <span className="file-breadcrumb-sep" aria-hidden="true">
-                /
-              </span>
-              <span>{folderName}</span>
+              {trail.map((folder, index) => (
+                <span key={folder.id}>
+                  <span className="file-breadcrumb-sep" aria-hidden="true">
+                    /
+                  </span>
+                  {index === trail.length - 1 ? (
+                    <span>{folder.name}</span>
+                  ) : (
+                    <button type="button" onClick={() => onSelect(folder.id)}>
+                      {folder.name}
+                    </button>
+                  )}
+                </span>
+              ))}
             </>
           )}
           <small className="file-count">
             {total} {total === 1 ? "item" : "items"}
           </small>
         </nav>
-        <div className="view-toggle" role="group" aria-label="Library view">
-          <button
-            type="button"
-            className={view === "list" ? "active" : undefined}
-            aria-pressed={view === "list"}
-            onClick={() => onViewChange("list")}
-            aria-label="List view"
-            title="List view"
+        <div className="file-browser-actions">
+          <select
+            className="library-sort"
+            aria-label="Sort"
+            value={sort}
+            onChange={(event) =>
+              onSortChange(event.target.value as LibrarySort)
+            }
           >
-            <List size={16} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className={view === "grid" ? "active" : undefined}
-            aria-pressed={view === "grid"}
-            onClick={() => onViewChange("grid")}
-            aria-label="Grid view"
-            title="Grid view"
-          >
-            <LayoutGrid size={16} aria-hidden="true" />
-          </button>
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
+            <option value="modified-desc">Modified newest</option>
+            <option value="modified-asc">Modified oldest</option>
+          </select>
+          <div className="view-toggle" role="group" aria-label="Library view">
+            <button
+              type="button"
+              className={view === "list" ? "active" : undefined}
+              aria-pressed={view === "list"}
+              onClick={() => onViewChange("list")}
+              aria-label="List view"
+              title="List view"
+            >
+              <List size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={view === "grid" ? "active" : undefined}
+              aria-pressed={view === "grid"}
+              onClick={() => onViewChange("grid")}
+              aria-label="Grid view"
+              title="Grid view"
+            >
+              <LayoutGrid size={16} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -179,103 +208,119 @@ export function FileBrowser({
             <span>Modified</span>
             <span className="file-list-head-actions" />
           </div>
-          {folders.map((folder) => (
-            <div className="file-row" role="listitem" key={folder.id}>
-              <button
-                type="button"
-                className="file-row-main"
-                onClick={() => onSelect(folder.id)}
-              >
-                <span className="file-icon" aria-hidden="true">
-                  <Folder size={18} />
-                </span>
-                <span className="file-name">{folder.name}</span>
-                <time
-                  className="file-date"
-                  dateTime={new Date(folder.createdAt).toISOString()}
+          {items.map((item) =>
+            item.kind === "folder" ? (
+              <div className="file-row" role="listitem" key={item.folder.id}>
+                <button
+                  type="button"
+                  className="file-row-main"
+                  onClick={() => onSelect(item.folder.id)}
                 >
-                  {formatDate(folder.createdAt)}
-                </time>
-              </button>
-              <ItemMenu
-                name={folder.name}
-                onOpen={() => onSelect(folder.id)}
-                onDelete={() => onDeleteFolder(folder.id, folder.name)}
-              />
-            </div>
-          ))}
-          {docs.map((doc) => (
-            <div className="file-row" role="listitem" key={doc.id}>
-              <Link href={`/reader/?id=${doc.id}`} className="file-row-main">
-                <span className="file-icon file-icon-page" aria-hidden="true">
-                  <FileText size={18} />
-                </span>
-                <span className="file-name">{doc.title}</span>
-                <time
-                  className="file-date"
-                  dateTime={new Date(doc.updatedAt).toISOString()}
+                  <span className="file-icon" aria-hidden="true">
+                    <Folder size={18} />
+                  </span>
+                  <span className="file-name">{item.folder.name}</span>
+                  <time
+                    className="file-date"
+                    dateTime={new Date(item.folder.createdAt).toISOString()}
+                  >
+                    {formatDate(item.folder.createdAt)}
+                  </time>
+                </button>
+                <ItemMenu
+                  name={item.folder.name}
+                  onOpen={() => onSelect(item.folder.id)}
+                  onDelete={() =>
+                    onDeleteFolder(item.folder.id, item.folder.name)
+                  }
+                />
+              </div>
+            ) : (
+              <div className="file-row" role="listitem" key={item.doc.id}>
+                <Link
+                  href={`/reader/?id=${item.doc.id}`}
+                  className="file-row-main"
                 >
-                  {formatDate(doc.updatedAt)}
-                </time>
-              </Link>
-              <ItemMenu
-                name={doc.title}
-                href={`/reader/?id=${doc.id}`}
-                onDelete={() => onDeleteDoc(doc.id, doc.title)}
-                onMove={() => onMoveDoc(doc.id, doc.title, doc.folderId)}
-              />
-            </div>
-          ))}
+                  <span className="file-icon file-icon-page" aria-hidden="true">
+                    <FileText size={18} />
+                  </span>
+                  <span className="file-name">{item.doc.title}</span>
+                  <time
+                    className="file-date"
+                    dateTime={new Date(item.doc.updatedAt).toISOString()}
+                  >
+                    {formatDate(item.doc.updatedAt)}
+                  </time>
+                </Link>
+                <ItemMenu
+                  name={item.doc.title}
+                  href={`/reader/?id=${item.doc.id}`}
+                  onDelete={() => onDeleteDoc(item.doc.id, item.doc.title)}
+                  onMove={() =>
+                    onMoveDoc(item.doc.id, item.doc.title, item.doc.folderId)
+                  }
+                />
+              </div>
+            ),
+          )}
         </div>
       ) : (
         <div className="file-grid" role="list">
-          {folders.map((folder) => (
-            <div className="file-tile" role="listitem" key={folder.id}>
-              <ItemMenu
-                name={folder.name}
-                onOpen={() => onSelect(folder.id)}
-                onDelete={() => onDeleteFolder(folder.id, folder.name)}
-              />
-              <button
-                type="button"
-                className="file-tile-main"
-                onClick={() => onSelect(folder.id)}
-              >
-                <span className="file-icon" aria-hidden="true">
-                  <Folder size={28} />
-                </span>
-                <strong className="file-name">{folder.name}</strong>
-                <time
-                  className="file-date"
-                  dateTime={new Date(folder.createdAt).toISOString()}
+          {items.map((item) =>
+            item.kind === "folder" ? (
+              <div className="file-tile" role="listitem" key={item.folder.id}>
+                <ItemMenu
+                  name={item.folder.name}
+                  onOpen={() => onSelect(item.folder.id)}
+                  onDelete={() =>
+                    onDeleteFolder(item.folder.id, item.folder.name)
+                  }
+                />
+                <button
+                  type="button"
+                  className="file-tile-main"
+                  onClick={() => onSelect(item.folder.id)}
                 >
-                  {formatDate(folder.createdAt)}
-                </time>
-              </button>
-            </div>
-          ))}
-          {docs.map((doc) => (
-            <div className="file-tile" role="listitem" key={doc.id}>
-              <ItemMenu
-                name={doc.title}
-                href={`/reader/?id=${doc.id}`}
-                onDelete={() => onDeleteDoc(doc.id, doc.title)}
-                onMove={() => onMoveDoc(doc.id, doc.title, doc.folderId)}
-              />
-              <Link href={`/reader/?id=${doc.id}`} className="file-tile-main">
-                <span className="file-icon file-icon-page" aria-hidden="true">
-                  <FileText size={28} />
-                </span>
-                <strong className="file-name">{doc.title}</strong>
-                <time
-                  className="file-date"
-                  dateTime={new Date(doc.updatedAt).toISOString()}
+                  <span className="file-icon" aria-hidden="true">
+                    <Folder size={28} />
+                  </span>
+                  <strong className="file-name">{item.folder.name}</strong>
+                  <time
+                    className="file-date"
+                    dateTime={new Date(item.folder.createdAt).toISOString()}
+                  >
+                    {formatDate(item.folder.createdAt)}
+                  </time>
+                </button>
+              </div>
+            ) : (
+              <div className="file-tile" role="listitem" key={item.doc.id}>
+                <ItemMenu
+                  name={item.doc.title}
+                  href={`/reader/?id=${item.doc.id}`}
+                  onDelete={() => onDeleteDoc(item.doc.id, item.doc.title)}
+                  onMove={() =>
+                    onMoveDoc(item.doc.id, item.doc.title, item.doc.folderId)
+                  }
+                />
+                <Link
+                  href={`/reader/?id=${item.doc.id}`}
+                  className="file-tile-main"
                 >
-                  {formatDate(doc.updatedAt)}
-                </time>
-              </Link>
-            </div>
-          ))}
+                  <span className="file-icon file-icon-page" aria-hidden="true">
+                    <FileText size={28} />
+                  </span>
+                  <strong className="file-name">{item.doc.title}</strong>
+                  <time
+                    className="file-date"
+                    dateTime={new Date(item.doc.updatedAt).toISOString()}
+                  >
+                    {formatDate(item.doc.updatedAt)}
+                  </time>
+                </Link>
+              </div>
+            ),
+          )}
         </div>
       )}
     </div>

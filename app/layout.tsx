@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
-import { DEFAULT_THEME_ID, THEME_STORAGE_KEY, THEMES } from "../lib/themes";
+import { DEFAULT_THEME_ID, THEME_STORAGE_KEY, THEMES } from "@/lib/themes";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",

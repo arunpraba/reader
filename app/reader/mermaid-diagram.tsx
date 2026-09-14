@@ -18,7 +18,7 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { loadMermaid, mermaidSvgCache } from "../../lib/mermaid-loader";
+import { loadMermaid, mermaidSvgCache } from "@/lib/mermaid-loader";
 import { useTheme } from "../theme-provider";
 
 const ZOOM_MIN = 0.5;

@@ -8,7 +8,8 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import type { Doc, Folder as FolderType } from "../../../lib/storage";
+import type { Doc, Folder as FolderType } from "@/lib/storage";
+import { folderAncestors, isRootFolder, subtreeIds } from "@/lib/folder-tree";
 
 export function LibrarySidebar({
   selected,
@@ -29,6 +30,10 @@ export function LibrarySidebar({
   onStartFolderCreate: () => void;
   onDeleteFolder: (id: string, name: string) => void;
 }) {
+  const activeRoot =
+    selected === "all" || selected === null
+      ? null
+      : (folderAncestors(folders, selected)[0]?.id ?? selected);
   return (
     <aside className="library-sidebar" aria-label="Library sidebar">
       <div className="sidebar-top">
@@ -75,17 +80,22 @@ export function LibrarySidebar({
         </button>
       </div>
       <nav aria-label="Folders">
-        {folders.map((folder) => (
+        {folders.filter(isRootFolder).map((folder) => (
           <div className="nav-item-row" key={folder.id}>
             <button
-              className={`nav-item ${selected === folder.id ? "active" : ""}`}
+              className={`nav-item ${activeRoot === folder.id ? "active" : ""}`}
               onClick={() => onSelect(folder.id)}
               title={folder.name}
             >
               <Folder className="nav-glyph" aria-hidden="true" size={16} />
               <span className="nav-item-label">{folder.name}</span>
               <small>
-                {docs.filter((doc) => doc.folderId === folder.id).length}
+                {
+                  docs.filter(
+                    (doc) =>
+                      doc.folderId && subtreeIds(folders, folder.id).has(doc.folderId),
+                  ).length
+                }
               </small>
             </button>
             {!sidebarCollapsed && (

@@ -10,6 +10,7 @@ import { LibrarySidebar } from "./components/library/library-sidebar";
 import { LibraryTopbar } from "./components/library/library-topbar";
 import { useLibrary } from "./hooks/use-library";
 import { useLibrarySearch } from "./hooks/use-library-search";
+import { subtreeIds } from "@/lib/folder-tree";
 import { useMobileBreakpoint } from "./hooks/use-mobile-breakpoint";
 import { useSidebarState } from "./hooks/use-sidebar-state";
 
@@ -42,7 +43,7 @@ export function LibraryPage() {
     isMobile,
   });
 
-  const { search, setSearch, visible, visibleFolders } = useLibrarySearch(
+  const { search, setSearch, items, trail, sort, setSort } = useLibrarySearch(
     library.docs,
     library.folders,
     selected,
@@ -72,15 +73,16 @@ export function LibraryPage() {
     };
   }, []);
 
-  const selectedFolder = library.folders.find(
-    (folder) => folder.id === selected,
-  );
   const requestDeleteFolder = (id: string, name: string) => {
     setPendingDelete({ type: "folder", id, name });
   };
   const pendingFolderCount =
     pendingDelete?.type === "folder"
-      ? library.docs.filter((doc) => doc.folderId === pendingDelete.id).length
+      ? library.docs.filter(
+          (doc) =>
+            doc.folderId &&
+            subtreeIds(library.folders, pendingDelete.id).has(doc.folderId),
+        ).length
       : 0;
 
   return (
@@ -124,10 +126,11 @@ export function LibraryPage() {
             view={view}
             onViewChange={setView}
             search={search}
+            sort={sort}
+            onSortChange={setSort}
             selected={selected}
-            folderName={selectedFolder?.name}
-            folders={visibleFolders}
-            docs={visible}
+            trail={trail}
+            items={items}
             onSelect={setSelected}
             onDeleteFolder={requestDeleteFolder}
             onDeleteDoc={(id, title) =>
@@ -160,7 +163,7 @@ export function LibraryPage() {
         message={
           pendingDelete?.type === "folder"
             ? pendingFolderCount
-              ? `Delete “${pendingDelete.name}”? ${pendingFolderCount} page${pendingFolderCount === 1 ? "" : "s"} will become unfiled.`
+              ? `Delete “${pendingDelete.name}” and everything inside it? ${pendingFolderCount} page${pendingFolderCount === 1 ? "" : "s"} will become unfiled.`
               : `Delete “${pendingDelete.name}”?`
             : `Delete “${pendingDelete?.name ?? ""}”? This cannot be undone.`
         }

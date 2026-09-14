@@ -19,6 +19,7 @@ export type ReaderSettings = {
   wordRepeats: number;
   sentenceRepeats: number;
   paragraphRepeats: number;
+  skipParentheticals: boolean;
   preferredVoice: string;
   fontSize: number;
   lineHeight: number;
@@ -42,6 +43,7 @@ export const defaultReaderSettings: ReaderSettings = {
   wordRepeats: 1,
   sentenceRepeats: 1,
   paragraphRepeats: 1,
+  skipParentheticals: true,
   preferredVoice: "",
   fontSize: 1,
   lineHeight: 1.5,
@@ -136,6 +138,10 @@ export function loadReaderSettings(): ReaderSettings {
         typeof merged.preferredVoice === "string"
           ? merged.preferredVoice
           : defaultReaderSettings.preferredVoice,
+      skipParentheticals:
+        typeof merged.skipParentheticals === "boolean"
+          ? merged.skipParentheticals
+          : defaultReaderSettings.skipParentheticals,
     } as ReaderSettings;
   } catch {
     return {
@@ -191,4 +197,30 @@ export function loadSidebarCollapsed() {
 
 export function saveSidebarCollapsed(collapsed: boolean) {
   localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+}
+
+export type LibrarySort =
+  | "name-asc"
+  | "name-desc"
+  | "modified-desc"
+  | "modified-asc";
+
+const LIBRARY_SORT_KEY = "margin-library-sort";
+
+export function loadLibrarySort(): LibrarySort {
+  if (typeof window === "undefined") return "name-asc";
+  const raw = localStorage.getItem(LIBRARY_SORT_KEY);
+  if (
+    raw === "name-asc" ||
+    raw === "name-desc" ||
+    raw === "modified-desc" ||
+    raw === "modified-asc"
+  ) {
+    return raw;
+  }
+  return "name-asc";
+}
+
+export function saveLibrarySort(sort: LibrarySort) {
+  localStorage.setItem(LIBRARY_SORT_KEY, sort);
 }

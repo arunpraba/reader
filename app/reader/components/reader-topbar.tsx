@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { languageNames } from "../../../lib/language-names";
-import { saveSelectedFolder } from "../../../lib/reader-settings";
+import { languageNames } from "@/lib/language-names";
+import { saveSelectedFolder } from "@/lib/reader-settings";
 
 export function ReaderTopbar({
   title,
-  folderId,
-  folderName,
+  folderTrail,
   languages,
   saveState,
   editing,
@@ -15,8 +14,7 @@ export function ReaderTopbar({
   onOpenSettings,
 }: {
   title: string;
-  folderId: string | null;
-  folderName: string | null;
+  folderTrail: { id: string; name: string }[];
   languages: string[];
   saveState: "saved" | "saving";
   editing: boolean;
@@ -31,16 +29,16 @@ export function ReaderTopbar({
         <Link href="/" onClick={() => saveSelectedFolder("all")}>
           All files
         </Link>
-        {folderId && folderName ? (
-          <>
+        {folderTrail.map((folder) => (
+          <span key={folder.id}>
             <span className="file-breadcrumb-sep" aria-hidden="true">
               /
             </span>
-            <Link href="/" onClick={() => saveSelectedFolder(folderId)}>
-              {folderName}
+            <Link href="/" onClick={() => saveSelectedFolder(folder.id)}>
+              {folder.name}
             </Link>
-          </>
-        ) : null}
+          </span>
+        ))}
         <span className="file-breadcrumb-sep" aria-hidden="true">
           /
         </span>

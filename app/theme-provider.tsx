@@ -16,7 +16,7 @@ import {
   resolveThemeId,
   type ThemeId,
   type ThemeMeta,
-} from "../lib/themes";
+} from "@/lib/themes";
 
 type ThemeContextValue = {
   themeId: ThemeId;

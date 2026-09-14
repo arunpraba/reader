@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { readableText } from "../../../lib/readable-text";
+import { readableText } from "@/lib/readable-text";
 import { MarkdownDocument } from "../markdown-document";
 
 export function ReaderPaper({

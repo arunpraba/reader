@@ -1,4 +1,4 @@
-import { browserTtsAvailable } from "../../../lib/tts/capabilities";
+import { browserTtsAvailable } from "@/lib/tts/capabilities";
 
 export function VoiceSettings({
   preferredVoice,

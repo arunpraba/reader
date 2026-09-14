@@ -4,7 +4,7 @@ import {
   loadSidebarCollapsed,
   saveSelectedFolder,
   saveSidebarCollapsed,
-} from "../../lib/reader-settings";
+} from "@/lib/reader-settings";
 
 export function useSidebarState() {
   const [selected, setSelected] = useState<string | null | "all">("all");

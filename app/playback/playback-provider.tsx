@@ -5,7 +5,7 @@ import {
   getPlaybackEngine,
   type PlaybackDocument,
   type PlaybackSettings,
-} from "../../lib/playback-engine";
+} from "@/lib/playback-engine";
 import { GlobalMiniPlayer } from "../global-mini-player";
 import {
   PlaybackContext,

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { HighlightLevels } from "../../../lib/reader";
-import type { Word } from "../../../lib/reader";
-import { scrollRangeIntoView } from "../../../lib/highlight-spans";
+import type { HighlightLevels } from "@/lib/reader";
+import type { Word } from "@/lib/reader";
+import { scrollRangeIntoView } from "@/lib/highlight-spans";
 import {
   applyReadingHighlights,
   clearDomHighlights,
-} from "../../../lib/dom-highlight";
-import { useAutoScrollFollow } from "../../../lib/use-auto-scroll-follow";
+} from "@/lib/dom-highlight";
+import { useAutoScrollFollow } from "@/lib/use-auto-scroll-follow";
 
 export function useDomHighlight({
   active,

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type CSSProperties } from "react";
 import { useTheme } from "../theme-provider";
-import type { ThemeKind } from "../../lib/themes";
+import type { ThemeKind } from "@/lib/themes";
 
 type Filter = "all" | ThemeKind;
 

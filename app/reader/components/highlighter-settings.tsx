@@ -1,4 +1,4 @@
-import type { HighlightLevels } from "../../../lib/reader";
+import type { HighlightLevels } from "@/lib/reader";
 import { ToggleRow } from "../toggle-row";
 
 export function HighlighterSettings({

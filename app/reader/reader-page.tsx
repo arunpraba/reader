@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { estimateSeconds, flattenWords, parseMarkdown } from "../../lib/reader";
+import { estimateSeconds, flattenWords, parseMarkdown } from "@/lib/reader";
 import { ReaderControls } from "./components/reader-controls";
 import { ReaderLoading } from "./components/reader-loading";
 import { ReaderPaper } from "./components/reader-paper";
@@ -19,7 +19,7 @@ export function ReaderPage() {
   const {
     doc,
     setDoc,
-    folderName,
+    folderTrail,
     editing,
     setEditing,
     saveState,
@@ -29,8 +29,11 @@ export function ReaderPage() {
   const { voices } = useTtsVoices();
 
   const blocks = useMemo(
-    () => parseMarkdown(doc?.content ?? ""),
-    [doc?.content],
+    () =>
+      parseMarkdown(doc?.content ?? "", {
+        skipParentheticals: settings.skipParentheticals,
+      }),
+    [doc?.content, settings.skipParentheticals],
   );
   const words = useMemo(() => flattenWords(blocks), [blocks]);
   const languages = useMemo(
@@ -69,8 +72,7 @@ export function ReaderPage() {
     <main className="reader-shell">
       <ReaderTopbar
         title={doc.title}
-        folderId={doc.folderId}
-        folderName={folderName}
+        folderTrail={folderTrail}
         languages={languages}
         saveState={saveState}
         editing={editing}
@@ -111,9 +113,10 @@ export function ReaderPage() {
               wpm={settings.wpm}
               wordGap={settings.wordGap}
               sentenceGap={settings.sentenceGap}
-              paragraphGap={settings.paragraphGap}
-              pauseEnabled={settings.pauseEnabled}
-              wordRepeats={settings.wordRepeats}
+          paragraphGap={settings.paragraphGap}
+          pauseEnabled={settings.pauseEnabled}
+          skipParentheticals={settings.skipParentheticals}
+          wordRepeats={settings.wordRepeats}
               sentenceRepeats={settings.sentenceRepeats}
               paragraphRepeats={settings.paragraphRepeats}
               playing={playback.playing}
@@ -135,6 +138,7 @@ export function ReaderPage() {
                   [level]: enabled,
                 })
               }
+              onSkipParentheticalsChange={settings.setSkipParentheticals}
               onWordRepeatsChange={settings.setWordRepeats}
               onSentenceRepeatsChange={settings.setSentenceRepeats}
               onParagraphRepeatsChange={settings.setParagraphRepeats}

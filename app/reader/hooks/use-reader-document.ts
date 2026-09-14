@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Doc, storage } from "../../../lib/storage";
+import { folderAncestors } from "@/lib/folder-tree";
+import { Doc, storage } from "@/lib/storage";
 
 export function useReaderDocument() {
   const [doc, setDoc] = useState<Doc | null>(null);
-  const [folderName, setFolderName] = useState<string | null>(null);
+  const [folderTrail, setFolderTrail] = useState<{ id: string; name: string }[]>(
+    [],
+  );
   const [editing, setEditing] = useState(false);
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const searchParams = useSearchParams();
@@ -19,11 +22,8 @@ export function useReaderDocument() {
       ([value, folders]) => {
         positionRef.current = value?.readingPosition;
         setDoc(value ?? null);
-        setFolderName(
-          value?.folderId
-            ? (folders.find((folder) => folder.id === value.folderId)?.name ??
-              null)
-            : null,
+        setFolderTrail(
+          value?.folderId ? folderAncestors(folders, value.folderId) : [],
         );
       },
     );
@@ -56,7 +56,7 @@ export function useReaderDocument() {
   return {
     doc,
     setDoc,
-    folderName,
+    folderTrail,
     editing,
     setEditing,
     saveState,

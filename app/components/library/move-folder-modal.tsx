@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { FolderInput, X } from "lucide-react";
-import type { Folder } from "../../../lib/storage";
+import type { Folder } from "@/lib/storage";
+import { folderPathLabel } from "@/lib/folder-tree";
 
 export function MoveFolderModal({
   open,
@@ -35,7 +36,12 @@ export function MoveFolderModal({
 
   const destinations = [
     { id: null as string | null, name: "Unfiled" },
-    ...folders.map((folder) => ({ id: folder.id, name: folder.name })),
+    ...folders
+      .map((folder) => ({
+        id: folder.id,
+        name: folderPathLabel(folders, folder.id) || folder.name,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
   ];
 
   return (
