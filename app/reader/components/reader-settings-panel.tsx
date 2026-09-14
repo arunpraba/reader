@@ -4,6 +4,7 @@ import { GapSettings } from "./gap-settings";
 import { HighlighterSettings } from "./highlighter-settings";
 import { PlaybackControls } from "./playback-controls";
 import { RereadSettings } from "./reread-settings";
+import { SleepTimer } from "./sleep-timer";
 import { SpeedSettings } from "./speed-settings";
 import { TypographySettings } from "./typography-settings";
 import { VoiceSettings } from "./voice-settings";
@@ -123,6 +124,7 @@ export function ReaderSettingsPanel({
         onTypographyChange={onTypographyChange}
       />
       <SpeedSettings wpm={wpm} onWpmChange={onWpmChange} />
+      <SleepTimer />
       <GapSettings
         wordGap={wordGap}
         sentenceGap={sentenceGap}

@@ -17,6 +17,9 @@ export type PlaybackContextValue = {
   jump: (unit: "sentence" | "paragraph", direction: -1 | 1) => void;
   seekToRatio: (ratio: number, resume?: boolean) => number;
   activeIndex: () => number;
+  sleepMinutes: number;
+  sleepRemainingMs: number | null;
+  setSleepMinutes: (minutes: number) => void;
 };
 
 export const PlaybackContext = createContext<PlaybackContextValue | null>(null);

@@ -1,19 +1,26 @@
 "use client";
 
-import { useCallback, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import {
   getPlaybackEngine,
   type PlaybackDocument,
   type PlaybackSettings,
 } from "@/lib/playback-engine";
 import { GlobalMiniPlayer } from "../global-mini-player";
-import {
-  PlaybackContext,
-  type PlaybackContextValue,
-} from "./playback-context";
+import { PlaybackContext, type PlaybackContextValue } from "./playback-context";
 
 export function PlaybackProvider({ children }: { children: ReactNode }) {
   const engine = getPlaybackEngine();
+  const [sleepMinutes, setSleepMinutesState] = useState(0);
+  const [sleepEndsAt, setSleepEndsAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const snapshot = useSyncExternalStore(
     engine.subscribe,
     engine.getSnapshot,
@@ -49,6 +56,26 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
     [engine],
   );
   const activeIndex = useCallback(() => engine.activeIndex(), [engine]);
+  const setSleepMinutes = useCallback((minutes: number) => {
+    setSleepMinutesState(minutes);
+    setSleepEndsAt(minutes > 0 ? Date.now() + minutes * 60_000 : null);
+    setNow(Date.now());
+  }, []);
+
+  useEffect(() => {
+    if (!sleepEndsAt) return;
+    const tick = window.setInterval(() => {
+      const time = Date.now();
+      if (time >= sleepEndsAt) {
+        engine.stop(false);
+        setSleepMinutesState(0);
+        setSleepEndsAt(null);
+        return;
+      }
+      setNow(time);
+    }, 1000);
+    return () => window.clearInterval(tick);
+  }, [engine, sleepEndsAt]);
 
   const value = useMemo<PlaybackContextValue>(
     () => ({
@@ -64,6 +91,9 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
       jump,
       seekToRatio,
       activeIndex,
+      sleepMinutes,
+      sleepRemainingMs: sleepEndsAt ? Math.max(0, sleepEndsAt - now) : null,
+      setSleepMinutes,
     }),
     [
       snapshot.doc?.id,
@@ -78,6 +108,10 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
       jump,
       seekToRatio,
       activeIndex,
+      sleepMinutes,
+      sleepEndsAt,
+      now,
+      setSleepMinutes,
     ],
   );
 

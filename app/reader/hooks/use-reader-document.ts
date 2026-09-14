@@ -5,9 +5,9 @@ import { Doc, storage } from "@/lib/storage";
 
 export function useReaderDocument() {
   const [doc, setDoc] = useState<Doc | null>(null);
-  const [folderTrail, setFolderTrail] = useState<{ id: string; name: string }[]>(
-    [],
-  );
+  const [folderTrail, setFolderTrail] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [editing, setEditing] = useState(false);
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const searchParams = useSearchParams();
@@ -43,16 +43,6 @@ export function useReaderDocument() {
     return () => window.clearTimeout(timer);
   }, [doc?.title, doc?.content]);
 
-  const save = async () => {
-    if (!doc) return;
-    setSaveState("saving");
-    const next = { ...doc, updatedAt: Date.now() };
-    await storage.save(next);
-    setDoc(next);
-    setSaveState("saved");
-    setEditing(false);
-  };
-
   return {
     doc,
     setDoc,
@@ -60,7 +50,6 @@ export function useReaderDocument() {
     editing,
     setEditing,
     saveState,
-    save,
     positionRef,
   };
 }

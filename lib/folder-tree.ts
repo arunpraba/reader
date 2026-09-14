@@ -155,6 +155,7 @@ export function listLibraryItems<
     title: string;
     content: string;
     updatedAt: number;
+    pinned?: boolean;
   },
 >(
   docs: TDoc[],
@@ -187,7 +188,7 @@ export function listLibraryItems<
 
   const docItems = docs
     .filter((doc) => {
-      if (atRoot) return searching || doc.folderId === null;
+      if (atRoot) return searching || doc.folderId === null || Boolean(doc.pinned);
       if (!searching) return doc.folderId === selected;
       return doc.folderId !== null && scope?.has(doc.folderId) === true;
     })
@@ -213,6 +214,10 @@ export function listLibraryItems<
     }));
 
   return [...folderItems, ...docItems].sort((a, b) => {
+    const pin =
+      Number(b.kind === "doc" && Boolean(b.doc.pinned)) -
+      Number(a.kind === "doc" && Boolean(a.doc.pinned));
+    if (pin) return pin;
     if (sort === "name-asc" || sort === "name-desc") {
       const cmp = a.name.localeCompare(b.name, undefined, {
         sensitivity: "base",

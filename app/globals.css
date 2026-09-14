@@ -1762,6 +1762,53 @@ a {
 .library-content > .import-link-error {
   margin-bottom: 12px;
 }
+.continue-reading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+.continue-reading span,
+.continue-reading small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.continue-reading strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.continue-reading:hover {
+  border-color: var(--line-strong);
+}
+.import-progress {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.import-progress-track {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.import-progress-track span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
 .file-browser-toolbar {
   display: flex;
   align-items: center;
@@ -1897,6 +1944,12 @@ a {
 }
 .file-icon-page {
   color: var(--muted);
+}
+.file-pin {
+  flex-shrink: 0;
+  margin-right: 6px;
+  color: var(--accent);
+  vertical-align: -1px;
 }
 .file-name {
   flex: 1;
@@ -2079,6 +2132,57 @@ a {
   max-width: 1280px;
   margin: auto;
   transition: grid-template-columns 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reader-toc {
+  margin: 0 0 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.reader-toc h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.reader-toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.reader-toc a {
+  display: block;
+  padding: 4px 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  text-decoration: none;
+}
+.reader-toc a:hover {
+  color: var(--ink);
+}
+.reader-paper :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 16px;
+}
+.sleep-timer label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.sleep-timer select {
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  padding: 0 8px;
+}
+.sleep-timer small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
 }
 .reader-paper {
   background: var(--paper);

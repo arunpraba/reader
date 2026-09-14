@@ -5,6 +5,7 @@ import {
   Folder,
   LayoutGrid,
   List,
+  Pin,
   Plus,
 } from "lucide-react";
 import type { Doc, Folder as FolderType } from "@/lib/storage";
@@ -25,12 +26,18 @@ function ItemMenu({
   name,
   href,
   onOpen,
+  onRename,
+  onPin,
+  pinned,
   onMove,
   onDelete,
 }: {
   name: string;
   href?: string;
   onOpen?: () => void;
+  onRename?: () => void;
+  onPin?: () => void;
+  pinned?: boolean;
   onMove?: () => void;
   onDelete: () => void;
 }) {
@@ -49,6 +56,30 @@ function ItemMenu({
             Open
           </button>
         )}
+        {onRename ? (
+          <button
+            type="button"
+            className="top-more-item"
+            onClick={(event) => {
+              event.currentTarget.closest("details")?.removeAttribute("open");
+              onRename();
+            }}
+          >
+            Rename
+          </button>
+        ) : null}
+        {onPin ? (
+          <button
+            type="button"
+            className="top-more-item"
+            onClick={(event) => {
+              event.currentTarget.closest("details")?.removeAttribute("open");
+              onPin();
+            }}
+          >
+            {pinned ? "Unpin" : "Pin"}
+          </button>
+        ) : null}
         {onMove ? (
           <button
             type="button"
@@ -89,6 +120,8 @@ export function FileBrowser({
   onDeleteFolder,
   onDeleteDoc,
   onMoveDoc,
+  onRename,
+  onTogglePin,
   onCreateDoc,
 }: {
   view: FileView;
@@ -103,6 +136,12 @@ export function FileBrowser({
   onDeleteFolder: (id: string, name: string) => void;
   onDeleteDoc: (id: string, title: string) => void;
   onMoveDoc: (id: string, title: string, folderId: string | null) => void;
+  onRename: (item: {
+    type: "folder" | "doc";
+    id: string;
+    name: string;
+  }) => void;
+  onTogglePin: (id: string) => void;
   onCreateDoc: () => void;
 }) {
   const atRoot = selected === "all" || selected === null;
@@ -230,6 +269,13 @@ export function FileBrowser({
                 <ItemMenu
                   name={item.folder.name}
                   onOpen={() => onSelect(item.folder.id)}
+                  onRename={() =>
+                    onRename({
+                      type: "folder",
+                      id: item.folder.id,
+                      name: item.folder.name,
+                    })
+                  }
                   onDelete={() =>
                     onDeleteFolder(item.folder.id, item.folder.name)
                   }
@@ -244,7 +290,12 @@ export function FileBrowser({
                   <span className="file-icon file-icon-page" aria-hidden="true">
                     <FileText size={18} />
                   </span>
-                  <span className="file-name">{item.doc.title}</span>
+                  <span className="file-name">
+                    {item.doc.pinned ? (
+                      <Pin className="file-pin" size={12} aria-label="Pinned" />
+                    ) : null}
+                    {item.doc.title}
+                  </span>
                   <time
                     className="file-date"
                     dateTime={new Date(item.doc.updatedAt).toISOString()}
@@ -255,6 +306,15 @@ export function FileBrowser({
                 <ItemMenu
                   name={item.doc.title}
                   href={`/reader/?id=${item.doc.id}`}
+                  onRename={() =>
+                    onRename({
+                      type: "doc",
+                      id: item.doc.id,
+                      name: item.doc.title,
+                    })
+                  }
+                  pinned={item.doc.pinned}
+                  onPin={() => onTogglePin(item.doc.id)}
                   onDelete={() => onDeleteDoc(item.doc.id, item.doc.title)}
                   onMove={() =>
                     onMoveDoc(item.doc.id, item.doc.title, item.doc.folderId)
@@ -272,6 +332,13 @@ export function FileBrowser({
                 <ItemMenu
                   name={item.folder.name}
                   onOpen={() => onSelect(item.folder.id)}
+                  onRename={() =>
+                    onRename({
+                      type: "folder",
+                      id: item.folder.id,
+                      name: item.folder.name,
+                    })
+                  }
                   onDelete={() =>
                     onDeleteFolder(item.folder.id, item.folder.name)
                   }
@@ -298,6 +365,15 @@ export function FileBrowser({
                 <ItemMenu
                   name={item.doc.title}
                   href={`/reader/?id=${item.doc.id}`}
+                  onRename={() =>
+                    onRename({
+                      type: "doc",
+                      id: item.doc.id,
+                      name: item.doc.title,
+                    })
+                  }
+                  pinned={item.doc.pinned}
+                  onPin={() => onTogglePin(item.doc.id)}
                   onDelete={() => onDeleteDoc(item.doc.id, item.doc.title)}
                   onMove={() =>
                     onMoveDoc(item.doc.id, item.doc.title, item.doc.folderId)
@@ -310,7 +386,12 @@ export function FileBrowser({
                   <span className="file-icon file-icon-page" aria-hidden="true">
                     <FileText size={28} />
                   </span>
-                  <strong className="file-name">{item.doc.title}</strong>
+                  <strong className="file-name">
+                    {item.doc.pinned ? (
+                      <Pin className="file-pin" size={12} aria-label="Pinned" />
+                    ) : null}
+                    {item.doc.title}
+                  </strong>
                   <time
                     className="file-date"
                     dateTime={new Date(item.doc.updatedAt).toISOString()}

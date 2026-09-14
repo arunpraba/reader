@@ -10,7 +10,6 @@ export function ReaderTopbar({
   editing,
   onTitleChange,
   onToggleEditing,
-  onSave,
   onOpenSettings,
 }: {
   title: string;
@@ -20,7 +19,6 @@ export function ReaderTopbar({
   editing: boolean;
   onTitleChange: (title: string) => void;
   onToggleEditing: () => void;
-  onSave: () => void;
   onOpenSettings: () => void;
 }) {
   return (
@@ -65,9 +63,6 @@ export function ReaderTopbar({
           onClick={onToggleEditing}
         >
           {editing ? "Preview" : "Edit"}
-        </button>
-        <button className="primary-button" onClick={onSave}>
-          Done
         </button>
         <button
           className="mobile-settings"

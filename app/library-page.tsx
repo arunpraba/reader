@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ConfirmModal } from "./components/library/confirm-modal";
 import { FileBrowser, type FileView } from "./components/library/file-browser";
 import { FolderCreateModal } from "./components/library/folder-create-modal";
 import { ImportLinkModal } from "./components/library/import-link-modal";
 import { MoveFolderModal } from "./components/library/move-folder-modal";
+import { RenameModal } from "./components/library/rename-modal";
 import { LibrarySidebar } from "./components/library/library-sidebar";
 import { LibraryTopbar } from "./components/library/library-topbar";
 import { useLibrary } from "./hooks/use-library";
@@ -28,6 +30,12 @@ export function LibraryPage() {
     title: string;
     folderId: string | null;
   } | null>(null);
+  const [pendingRename, setPendingRename] = useState<{
+    type: "folder" | "doc";
+    id: string;
+    name: string;
+  } | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const {
     selected,
     setSelected,
@@ -76,6 +84,14 @@ export function LibraryPage() {
   const requestDeleteFolder = (id: string, name: string) => {
     setPendingDelete({ type: "folder", id, name });
   };
+  const resume = library.docs
+    .filter(
+      (doc) => doc.readingPosition && doc.readingPosition.progress < 0.98,
+    )
+    .sort(
+      (a, b) =>
+        (b.readingPosition?.savedAt ?? 0) - (a.readingPosition?.savedAt ?? 0),
+    )[0];
   const pendingFolderCount =
     pendingDelete?.type === "folder"
       ? library.docs.filter(
@@ -117,10 +133,40 @@ export function LibraryPage() {
           }}
         />
         <div className="library-content">
-          {library.importNotice ? (
+          {library.importProgress ? (
+            <p className="import-progress" role="status" aria-live="polite">
+              Importing {library.importProgress.done} of{" "}
+              {library.importProgress.total}
+              <span
+                className="import-progress-track"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={library.importProgress.total}
+                aria-valuenow={library.importProgress.done}
+                aria-label="Folder import progress"
+              >
+                <span
+                  style={{
+                    width: `${Math.round(
+                      (library.importProgress.done /
+                        library.importProgress.total) *
+                        100,
+                    )}%`,
+                  }}
+                />
+              </span>
+            </p>
+          ) : library.importNotice ? (
             <p className="import-link-error" role="status">
               {library.importNotice}
             </p>
+          ) : null}
+          {resume?.readingPosition ? (
+            <Link className="continue-reading" href={`/reader/?id=${resume.id}`}>
+              <span>Continue reading</span>
+              <strong>{resume.title}</strong>
+              <small>{Math.round(resume.readingPosition.progress * 100)}%</small>
+            </Link>
           ) : null}
           <FileBrowser
             view={view}
@@ -139,6 +185,11 @@ export function LibraryPage() {
             onMoveDoc={(id, title, folderId) =>
               setPendingMove({ id, title, folderId })
             }
+            onRename={(item) => {
+              setRenameValue(item.name);
+              setPendingRename(item);
+            }}
+            onTogglePin={(id) => void library.togglePin(id)}
             onCreateDoc={() => void library.createDoc()}
           />
         </div>
@@ -163,7 +214,7 @@ export function LibraryPage() {
         message={
           pendingDelete?.type === "folder"
             ? pendingFolderCount
-              ? `Delete “${pendingDelete.name}” and everything inside it? ${pendingFolderCount} page${pendingFolderCount === 1 ? "" : "s"} will become unfiled.`
+              ? `Delete “${pendingDelete.name}” and everything inside it? ${pendingFolderCount} page${pendingFolderCount === 1 ? "" : "s"} will be deleted. This cannot be undone.`
               : `Delete “${pendingDelete.name}”?`
             : `Delete “${pendingDelete?.name ?? ""}”? This cannot be undone.`
         }
@@ -177,6 +228,24 @@ export function LibraryPage() {
             void library.deleteDoc(pendingDelete.id);
           }
           setPendingDelete(null);
+        }}
+      />
+      <RenameModal
+        open={pendingRename !== null}
+        title={
+          pendingRename?.type === "folder" ? "Rename folder" : "Rename page"
+        }
+        value={renameValue}
+        onChange={setRenameValue}
+        onCancel={() => setPendingRename(null)}
+        onSubmit={() => {
+          if (!pendingRename) return;
+          if (pendingRename.type === "folder") {
+            void library.renameFolder(pendingRename.id, renameValue);
+          } else {
+            void library.renameDoc(pendingRename.id, renameValue);
+          }
+          setPendingRename(null);
         }}
       />
       <FolderCreateModal

@@ -22,6 +22,7 @@ export type Doc = {
   content: string;
   updatedAt: number;
   readingPosition?: ReadingPosition;
+  pinned?: boolean;
 };
 
 const DB_NAME = "margin-reader";
@@ -103,7 +104,7 @@ export const storage = {
     await Promise.all(
       docs
         .filter((doc) => doc.folderId && ids.has(doc.folderId))
-        .map((doc) => put("docs", { ...doc, folderId: null })),
+        .map((doc) => remove("docs", doc.id)),
     );
     await Promise.all([...ids].map((folderId) => remove("folders", folderId)));
   },

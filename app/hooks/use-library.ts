@@ -34,7 +34,9 @@ async function loadLibrary() {
   ]);
   const repaired = repairSlashFolders(folderList, createId);
   if (repaired.upserts.length) {
-    await Promise.all(repaired.upserts.map((folder) => storage.saveFolder(folder)));
+    await Promise.all(
+      repaired.upserts.map((folder) => storage.saveFolder(folder)),
+    );
   }
   return {
     folders: repaired.folders.sort((a, b) => a.name.localeCompare(b.name)),
@@ -64,6 +66,10 @@ export function useLibrary({
   const [importingLink, setImportingLink] = useState(false);
   const [importLinkError, setImportLinkError] = useState("");
   const [importNotice, setImportNotice] = useState("");
+  const [importProgress, setImportProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,14 +130,44 @@ export function useLibrary({
     setDocs((current) => current.filter((doc) => doc.id !== id));
   };
 
+  const renameFolder = async (id: string, name: string) => {
+    const trimmed = name.trim();
+    const folder = folders.find((item) => item.id === id);
+    if (!folder || !trimmed || trimmed === folder.name) return;
+    const next = { ...folder, name: trimmed };
+    await storage.saveFolder(next);
+    setFolders((current) =>
+      current.map((item) => (item.id === id ? next : item)),
+    );
+  };
+
+  const renameDoc = async (id: string, title: string) => {
+    const trimmed = title.trim();
+    const doc = docs.find((item) => item.id === id);
+    if (!doc || !trimmed || trimmed === doc.title) return;
+    const next = { ...doc, title: trimmed, updatedAt: Date.now() };
+    await storage.save(next);
+    setDocs((current) =>
+      current.map((item) => (item.id === id ? next : item)),
+    );
+  };
+
+  const togglePin = async (id: string) => {
+    const doc = docs.find((item) => item.id === id);
+    if (!doc) return;
+    const next = { ...doc, pinned: !doc.pinned };
+    await storage.save(next);
+    setDocs((current) =>
+      current.map((item) => (item.id === id ? next : item)),
+    );
+  };
+
   const moveDoc = async (id: string, folderId: string | null) => {
     const doc = docs.find((item) => item.id === id);
     if (!doc || doc.folderId === folderId) return;
     const next = { ...doc, folderId };
     await storage.save(next);
-    setDocs((current) =>
-      current.map((item) => (item.id === id ? next : item)),
-    );
+    setDocs((current) => current.map((item) => (item.id === id ? next : item)));
   };
 
   const deleteFolder = async (id: string) => {
@@ -139,11 +175,7 @@ export function useLibrary({
     await storage.deleteFolder(id);
     setFolders((current) => current.filter((folder) => !ids.has(folder.id)));
     setDocs((current) =>
-      current.map((doc) =>
-        doc.folderId && ids.has(doc.folderId)
-          ? { ...doc, folderId: null }
-          : doc,
-      ),
+      current.filter((doc) => !doc.folderId || !ids.has(doc.folderId)),
     );
     if (selected !== "all" && selected !== null && ids.has(selected)) {
       setSelected("all");
@@ -188,6 +220,7 @@ export function useLibrary({
       return;
     }
     setImportNotice("");
+    setImportProgress({ done: 0, total: usable.length });
 
     const createdFolders: Folder[] = [];
     const createdDocs: Doc[] = [];
@@ -195,41 +228,46 @@ export function useLibrary({
     let working = [...folders];
     let stamp = Date.now() + usable.length;
 
-    for (const file of usable) {
-      const relative = file.webkitRelativePath || file.name;
-      const segments = relative.split("/").slice(0, -1).filter(Boolean);
-      const planned = segments.length
-        ? planFolderChain(working, segments, createId, stamp)
-        : null;
-      if (planned) {
-        working = planned.folders;
-        for (const folder of planned.created) {
-          await storage.saveFolder(folder);
-          createdFolders.push(folder);
+    try {
+      for (const [index, file] of usable.entries()) {
+        const relative = file.webkitRelativePath || file.name;
+        const segments = relative.split("/").slice(0, -1).filter(Boolean);
+        const planned = segments.length
+          ? planFolderChain(working, segments, createId, stamp)
+          : null;
+        if (planned) {
+          working = planned.folders;
+          for (const folder of planned.created) {
+            await storage.saveFolder(folder);
+            createdFolders.push(folder);
+          }
+          importedRoots.add(planned.rootId);
         }
-        importedRoots.add(planned.rootId);
+        stamp -= 1;
+        const doc: Doc = {
+          id: createId(),
+          folderId: planned?.leafId ?? (selected === "all" ? null : selected),
+          title: file.name.replace(/\.(md|markdown|txt)$/i, "") || "Untitled",
+          content: await file.text(),
+          updatedAt: stamp,
+        };
+        await storage.save(doc);
+        createdDocs.push(doc);
+        setImportProgress({ done: index + 1, total: usable.length });
       }
-      stamp -= 1;
-      const doc: Doc = {
-        id: createId(),
-        folderId: planned?.leafId ?? (selected === "all" ? null : selected),
-        title: file.name.replace(/\.(md|markdown|txt)$/i, "") || "Untitled",
-        content: await file.text(),
-        updatedAt: stamp,
-      };
-      await storage.save(doc);
-      createdDocs.push(doc);
-    }
 
-    setFolders((current) =>
-      [...current, ...createdFolders].sort((a, b) =>
-        a.name.localeCompare(b.name),
-      ),
-    );
-    setDocs((current) =>
-      [...createdDocs, ...current].sort((a, b) => b.updatedAt - a.updatedAt),
-    );
-    setSelected(importedRoots.size === 1 ? [...importedRoots][0] : "all");
+      setFolders((current) =>
+        [...current, ...createdFolders].sort((a, b) =>
+          a.name.localeCompare(b.name),
+        ),
+      );
+      setDocs((current) =>
+        [...createdDocs, ...current].sort((a, b) => b.updatedAt - a.updatedAt),
+      );
+      setSelected(importedRoots.size === 1 ? [...importedRoots][0] : "all");
+    } finally {
+      setImportProgress(null);
+    }
   };
 
   const importFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,11 +347,15 @@ export function useLibrary({
     startFolderCreate,
     createFolder,
     deleteDoc,
+    renameFolder,
+    renameDoc,
+    togglePin,
     moveDoc,
     deleteFolder,
     createDoc,
     importNotice,
     setImportNotice,
+    importProgress,
     importFile,
     importFolder,
     importFromLink,

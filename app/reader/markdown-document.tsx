@@ -3,6 +3,7 @@
 import {
   memo,
   useCallback,
+  useMemo,
   useRef,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -14,17 +15,27 @@ import remarkMath from "remark-math";
 import { readPositionFromPoint } from "@/lib/read-position";
 import { markdownComponents } from "./markdown-components";
 import { rehypeReadingBlocks } from "@/lib/rehype-reading-blocks";
+import { rehypeHeadingIds } from "@/lib/table-of-contents";
 
 const remarkPlugins = [remarkGfm, remarkMath];
-const rehypePlugins = [rehypeKatex, rehypeReadingBlocks];
 
 export const MarkdownDocument = memo(function MarkdownDocument({
   content,
+  headingIds,
   onStartAt,
 }: {
   content: string;
+  headingIds: string[];
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
+  const rehypePlugins = useMemo(
+    () => [
+      rehypeKatex,
+      rehypeReadingBlocks,
+      () => rehypeHeadingIds(headingIds),
+    ],
+    [headingIds],
+  );
   const lastTapRef = useRef({ time: 0, x: 0, y: 0 });
   const lastStartRef = useRef(0);
 

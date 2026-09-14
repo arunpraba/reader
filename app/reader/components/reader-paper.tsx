@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
+import { useMemo } from "react";
 import { readableText } from "@/lib/readable-text";
+import { tableOfContents } from "@/lib/table-of-contents";
 import { MarkdownDocument } from "../markdown-document";
 
 export function ReaderPaper({
@@ -25,6 +27,10 @@ export function ReaderPaper({
   onContentChange: (content: string) => void;
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
+  const toc = useMemo(
+    () => (editing ? [] : tableOfContents(content)),
+    [content, editing],
+  );
   return (
     <article
       className="reader-paper"
@@ -56,7 +62,39 @@ export function ReaderPaper({
           spellCheck
         />
       ) : (
-        <MarkdownDocument content={content} onStartAt={onStartAt} />
+        <>
+          {toc.length > 1 ? (
+            <nav className="reader-toc" aria-label="Contents">
+              <h2>Contents</h2>
+              <ol>
+                {toc.map((item) => (
+                  <li
+                    key={item.id}
+                    style={{ paddingLeft: (item.depth - 1) * 12 }}
+                  >
+                    <a
+                      href={`#${item.id}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        document.getElementById(item.id)?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }}
+                    >
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          ) : null}
+          <MarkdownDocument
+            content={content}
+            headingIds={toc.map((item) => item.id)}
+            onStartAt={onStartAt}
+          />
+        </>
       )}
     </article>
   );

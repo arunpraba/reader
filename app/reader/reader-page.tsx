@@ -23,7 +23,6 @@ export function ReaderPage() {
     editing,
     setEditing,
     saveState,
-    save,
     positionRef,
   } = useReaderDocument();
   const { voices } = useTtsVoices();
@@ -78,7 +77,6 @@ export function ReaderPage() {
         editing={editing}
         onTitleChange={(title) => setDoc({ ...doc, title })}
         onToggleEditing={() => setEditing(!editing)}
-        onSave={save}
         onOpenSettings={() => settings.setSettingsOpen(true)}
       />
       <div
@@ -113,10 +111,10 @@ export function ReaderPage() {
               wpm={settings.wpm}
               wordGap={settings.wordGap}
               sentenceGap={settings.sentenceGap}
-          paragraphGap={settings.paragraphGap}
-          pauseEnabled={settings.pauseEnabled}
-          skipParentheticals={settings.skipParentheticals}
-          wordRepeats={settings.wordRepeats}
+              paragraphGap={settings.paragraphGap}
+              pauseEnabled={settings.pauseEnabled}
+              skipParentheticals={settings.skipParentheticals}
+              wordRepeats={settings.wordRepeats}
               sentenceRepeats={settings.sentenceRepeats}
               paragraphRepeats={settings.paragraphRepeats}
               playing={playback.playing}
