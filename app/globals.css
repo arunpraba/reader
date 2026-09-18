@@ -2069,6 +2069,43 @@ a {
   align-items: center;
   padding: 0 20px;
   gap: 16px;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.28s ease;
+}
+.reader-topbar.reader-topbar-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  overflow: hidden;
+}
+.reader-fullscreen-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+}
+/* Android immersive: fill the screen when status/nav bars are hidden. */
+html:fullscreen,
+html:-webkit-full-screen,
+html.is-fullscreen {
+  background: var(--bg);
+}
+html:fullscreen body,
+html:-webkit-full-screen body,
+html.is-fullscreen body,
+html:fullscreen .reader-shell,
+html:-webkit-full-screen .reader-shell,
+html.is-fullscreen .reader-shell {
+  min-height: 100dvh;
+  min-height: 100svh;
 }
 .reader-breadcrumb {
   display: flex;
@@ -2230,6 +2267,51 @@ a {
   font-size: var(--reader-font-size, 1rem);
   line-height: var(--reader-line-height, 1.5);
   letter-spacing: var(--reader-letter-spacing, 0em);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+}
+.reader-paper .notion-editor {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+}
+/* Android phones: thicker glyphs + soft fringe survive Miracast/Chromecast upscale. */
+@media (hover: none) and (pointer: coarse) {
+  .reader-paper .markdown-doc.markdown-body {
+    /* geometricPrecision beats optimizeLegibility on Blink/Android when scaled. */
+    text-rendering: geometricPrecision;
+    font-weight: 450;
+    letter-spacing: calc(var(--reader-letter-spacing, 0em) + 0.012em);
+    text-shadow:
+      0 0 0.35px color-mix(in oklab, currentColor 55%, transparent),
+      0 0 1.1px color-mix(in oklab, currentColor 22%, transparent);
+  }
+  .reader-paper .markdown-doc.markdown-body :is(pre, code, tt, kbd, samp) {
+    text-shadow: none;
+    text-rendering: auto;
+    font-weight: 400;
+    letter-spacing: normal;
+  }
+  .reader-paper
+    .markdown-doc.markdown-body
+    :is(h1, h2, h3, h4, h5, h6, strong, b) {
+    /* Keep display weights; only soften edges for cast. */
+    text-shadow:
+      0 0 0.35px color-mix(in oklab, currentColor 55%, transparent),
+      0 0 1.1px color-mix(in oklab, currentColor 22%, transparent);
+  }
+  .reader-paper .notion-editor {
+    text-rendering: geometricPrecision;
+    font-weight: 450;
+    letter-spacing: calc(var(--reader-letter-spacing, 0em) + 0.012em);
+    text-shadow:
+      0 0 0.35px color-mix(in oklab, currentColor 55%, transparent),
+      0 0 1.1px color-mix(in oklab, currentColor 22%, transparent);
+  }
 }
 .markdown-doc.markdown-body ul {
   list-style: disc;
@@ -2594,7 +2676,10 @@ a {
   .auto-language {
     display: none;
   }
-  .reader-actions > .secondary-button:not(.reader-edit-button) {
+  .reader-actions
+    > .secondary-button:not(.reader-edit-button):not(
+      .reader-fullscreen-button
+    ) {
     display: none;
   }
   .reader-edit-button {

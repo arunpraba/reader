@@ -7,7 +7,9 @@ import { ReaderLoading } from "./components/reader-loading";
 import { ReaderPaper } from "./components/reader-paper";
 import { ReaderSettingsPanel } from "./components/reader-settings-panel";
 import { ReaderTopbar } from "./components/reader-topbar";
+import { useAutoHideHeader } from "./hooks/use-auto-hide-header";
 import { useDomHighlight } from "./hooks/use-dom-highlight";
+import { useFullscreen } from "./hooks/use-fullscreen";
 import { useReaderDocument } from "./hooks/use-reader-document";
 import { useReaderPlayback } from "./hooks/use-reader-playback";
 import { useReaderSettings } from "./hooks/use-reader-settings";
@@ -26,6 +28,8 @@ export function ReaderPage() {
     positionRef,
   } = useReaderDocument();
   const { voices } = useTtsVoices();
+  const { fullscreen, toggleFullscreen } = useFullscreen();
+  const { headerVisible } = useAutoHideHeader(editing);
 
   const blocks = useMemo(
     () =>
@@ -75,9 +79,12 @@ export function ReaderPage() {
         languages={languages}
         saveState={saveState}
         editing={editing}
+        visible={headerVisible}
+        fullscreen={fullscreen}
         onTitleChange={(title) => setDoc({ ...doc, title })}
         onToggleEditing={() => setEditing(!editing)}
         onOpenSettings={() => settings.setSettingsOpen(true)}
+        onToggleFullscreen={toggleFullscreen}
       />
       <div
         className={`reader-layout ${settings.minimized ? "player-minimized" : ""}`}

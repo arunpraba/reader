@@ -25,9 +25,9 @@ export function TypographySettings({
         label="Font size"
         value={fontSize}
         setValue={(next) => onTypographyChange({ fontSize: next })}
-        min={0.875}
+        min={0.25}
         max={2.25}
-        step={0.125}
+        step={0.05}
         suffix="rem"
       />
       <CounterRow

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { languageNames } from "@/lib/language-names";
 import { saveSelectedFolder } from "@/lib/reader-settings";
 
@@ -8,21 +9,29 @@ export function ReaderTopbar({
   languages,
   saveState,
   editing,
+  visible,
+  fullscreen,
   onTitleChange,
   onToggleEditing,
   onOpenSettings,
+  onToggleFullscreen,
 }: {
   title: string;
   folderTrail: { id: string; name: string }[];
   languages: string[];
   saveState: "saved" | "saving";
   editing: boolean;
+  visible: boolean;
+  fullscreen: boolean;
   onTitleChange: (title: string) => void;
   onToggleEditing: () => void;
   onOpenSettings: () => void;
+  onToggleFullscreen: () => void;
 }) {
   return (
-    <header className="reader-topbar">
+    <header
+      className={`reader-topbar${visible ? "" : " reader-topbar-hidden"}`}
+    >
       <nav className="reader-breadcrumb" aria-label="Breadcrumb">
         <Link href="/" onClick={() => saveSelectedFolder("all")}>
           All files
@@ -58,6 +67,19 @@ export function ReaderTopbar({
         <span className="autosave-state" aria-live="polite">
           {saveState === "saving" ? "Saving…" : "Saved"}
         </span>
+        <button
+          type="button"
+          className="secondary-button reader-fullscreen-button"
+          onClick={onToggleFullscreen}
+          aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+        >
+          {fullscreen ? (
+            <Minimize2 size={16} aria-hidden="true" />
+          ) : (
+            <Maximize2 size={16} aria-hidden="true" />
+          )}
+        </button>
         <button
           className="secondary-button reader-edit-button"
           onClick={onToggleEditing}
