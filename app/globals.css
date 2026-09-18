@@ -2069,20 +2069,6 @@ a {
   align-items: center;
   padding: 0 20px;
   gap: 16px;
-  transition:
-    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.28s ease;
-}
-.reader-topbar.reader-topbar-hidden {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-  height: 0;
-  min-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-bottom-width: 0;
-  overflow: hidden;
 }
 .reader-fullscreen-button {
   display: inline-flex;
@@ -2227,7 +2213,7 @@ html.is-fullscreen .reader-shell {
   border-radius: 8px;
   min-height: calc(100dvh - 120px);
   padding: 48px 56px;
-  max-width: min(100%, var(--reader-content-max-width, 860px));
+  max-width: 100%;
   width: 100%;
   margin: 0 auto;
   box-shadow: none;
@@ -2258,7 +2244,7 @@ html.is-fullscreen .reader-shell {
   }
 }
 .markdown-doc {
-  max-width: 980px;
+  max-width: none;
   margin: 0 auto;
   background-color: transparent;
   touch-action: manipulation;
@@ -2269,7 +2255,6 @@ html.is-fullscreen .reader-shell {
   letter-spacing: var(--reader-letter-spacing, 0em);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
   font-optical-sizing: auto;
   font-kerning: normal;
 }
@@ -2279,7 +2264,6 @@ html.is-fullscreen .reader-shell {
 .reader-paper .notion-editor {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
   font-optical-sizing: auto;
 }
 /* Android phones: thicker glyphs + soft fringe survive Miracast/Chromecast upscale. */

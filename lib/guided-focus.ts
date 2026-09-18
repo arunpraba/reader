@@ -31,7 +31,10 @@ export function guidedFocusPrefixLength(len: number): number {
 }
 
 export function shouldSkipGuidedFocusWord(word: string): boolean {
-  return SKIP_SCRIPT.test(word);
+  if (SKIP_SCRIPT.test(word)) return true;
+  // Numbers / digit-only tokens — no guided focus
+  if (!/\p{L}/u.test(word)) return true;
+  return false;
 }
 
 /**

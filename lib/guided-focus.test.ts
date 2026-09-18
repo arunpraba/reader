@@ -30,6 +30,12 @@ describe("splitGuidedFocusWord", () => {
     assert.equal(shouldSkipGuidedFocusWord("ไทย"), true);
     assert.equal(splitGuidedFocusWord("日本語"), null);
   });
+
+  it("does not transform numbers", () => {
+    assert.equal(shouldSkipGuidedFocusWord("2024"), true);
+    assert.equal(shouldSkipGuidedFocusWord("3.14"), true);
+    assert.equal(splitGuidedFocusWord("12345"), null);
+  });
 });
 
 describe("segmentGuidedFocusText", () => {

@@ -50,9 +50,6 @@ export function useReaderSettings() {
   const [letterSpacing, setLetterSpacing] = useState(
     defaultReaderSettings.letterSpacing,
   );
-  const [contentMaxWidth, setContentMaxWidth] = useState(
-    defaultReaderSettings.contentMaxWidth,
-  );
   const [skipParentheticals, setSkipParentheticals] = useState(
     defaultReaderSettings.skipParentheticals,
   );
@@ -80,7 +77,6 @@ export function useReaderSettings() {
     setFontSize(saved.fontSize);
     setLineHeight(saved.lineHeight);
     setLetterSpacing(saved.letterSpacing);
-    setContentMaxWidth(saved.contentMaxWidth);
     setSkipParentheticals(saved.skipParentheticals);
     setGuidedFocus(saved.guidedFocus);
     setGuidedFocusOpacity(saved.guidedFocusOpacity);
@@ -106,7 +102,6 @@ export function useReaderSettings() {
       fontSize,
       lineHeight,
       letterSpacing,
-      contentMaxWidth,
       skipParentheticals,
       guidedFocus,
       guidedFocusOpacity,
@@ -130,7 +125,6 @@ export function useReaderSettings() {
     fontSize,
     lineHeight,
     letterSpacing,
-    contentMaxWidth,
     skipParentheticals,
     guidedFocus,
     guidedFocusOpacity,
@@ -156,7 +150,6 @@ export function useReaderSettings() {
         fontSize: number;
         lineHeight: number;
         letterSpacing: number;
-        contentMaxWidth: number;
         guidedFocus: boolean;
         guidedFocusOpacity: number;
       }>,
@@ -165,8 +158,6 @@ export function useReaderSettings() {
       if (next.lineHeight !== undefined) setLineHeight(next.lineHeight);
       if (next.letterSpacing !== undefined)
         setLetterSpacing(next.letterSpacing);
-      if (next.contentMaxWidth !== undefined)
-        setContentMaxWidth(next.contentMaxWidth);
       if (next.guidedFocus !== undefined) setGuidedFocus(next.guidedFocus);
       if (next.guidedFocusOpacity !== undefined)
         setGuidedFocusOpacity(next.guidedFocusOpacity);
@@ -204,7 +195,6 @@ export function useReaderSettings() {
     fontSize,
     lineHeight,
     letterSpacing,
-    contentMaxWidth,
     guidedFocus,
     guidedFocusOpacity,
     skipParentheticals,

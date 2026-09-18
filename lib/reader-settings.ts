@@ -24,7 +24,6 @@ export type ReaderSettings = {
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
-  contentMaxWidth: number;
   guidedFocus: boolean;
   guidedFocusOpacity: number;
   settingsOpen: boolean;
@@ -51,7 +50,6 @@ export const defaultReaderSettings: ReaderSettings = {
   fontSize: 1,
   lineHeight: 1.5,
   letterSpacing: 0,
-  contentMaxWidth: 860,
   guidedFocus: false,
   guidedFocusOpacity: 0.4,
   settingsOpen: false,
@@ -101,8 +99,6 @@ function readLegacySettings(): Partial<ReaderSettings> {
         next.lineHeight = parsed.lineHeight;
       if (typeof parsed.letterSpacing === "number")
         next.letterSpacing = parsed.letterSpacing;
-      if (typeof parsed.contentMaxWidth === "number")
-        next.contentMaxWidth = parsed.contentMaxWidth;
     }
   } catch {}
 
@@ -148,11 +144,6 @@ export function loadReaderSettings(): ReaderSettings {
         typeof merged.letterSpacing === "number"
           ? merged.letterSpacing
           : defaultReaderSettings.letterSpacing,
-      contentMaxWidth:
-        typeof merged.contentMaxWidth === "number" &&
-        Number.isFinite(merged.contentMaxWidth)
-          ? Math.min(1200, Math.max(480, Math.round(merged.contentMaxWidth)))
-          : defaultReaderSettings.contentMaxWidth,
       guidedFocus:
         typeof merged.guidedFocus === "boolean"
           ? merged.guidedFocus
@@ -195,7 +186,6 @@ export function saveReaderSettings(settings: ReaderSettings) {
       fontSize: settings.fontSize,
       lineHeight: settings.lineHeight,
       letterSpacing: settings.letterSpacing,
-      contentMaxWidth: settings.contentMaxWidth,
     }),
   );
 }

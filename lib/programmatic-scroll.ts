@@ -31,9 +31,9 @@ function endAutoScroll() {
 
 /**
  * Run a playback/follow scroll and keep `isAutoScrolling()` true until
- * window scroll events settle (or a max duration elapses).
+ * scrolling settles (scrollend when available, else a settle timer).
  */
-export function runAutoScroll(fn: () => void, settleMs = 120, maxMs = 3000) {
+export function runAutoScroll(fn: () => void, settleMs = 180, maxMs = 3000) {
   beginAutoScroll();
 
   let done = false;
@@ -45,7 +45,14 @@ export function runAutoScroll(fn: () => void, settleMs = 120, maxMs = 3000) {
     if (settleTimer) clearTimeout(settleTimer);
     clearTimeout(maxTimer);
     window.removeEventListener("scroll", onScroll);
+    window.removeEventListener("scrollend", onScrollEnd);
     endAutoScroll();
+  };
+
+  const onScrollEnd = () => {
+    // Brief grace so late scroll events from the same gesture don't flash chrome.
+    if (settleTimer) clearTimeout(settleTimer);
+    settleTimer = setTimeout(finish, settleMs);
   };
 
   const onScroll = () => {
@@ -54,6 +61,7 @@ export function runAutoScroll(fn: () => void, settleMs = 120, maxMs = 3000) {
   };
 
   window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("scrollend", onScrollEnd, { passive: true });
   const maxTimer = setTimeout(finish, maxMs);
 
   try {

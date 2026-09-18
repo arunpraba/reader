@@ -7,7 +7,6 @@ import { ReaderLoading } from "./components/reader-loading";
 import { ReaderPaper } from "./components/reader-paper";
 import { ReaderSettingsPanel } from "./components/reader-settings-panel";
 import { ReaderTopbar } from "./components/reader-topbar";
-import { useAutoHideHeader } from "./hooks/use-auto-hide-header";
 import { useDomHighlight } from "./hooks/use-dom-highlight";
 import { useFullscreen } from "./hooks/use-fullscreen";
 import { useReaderDocument } from "./hooks/use-reader-document";
@@ -29,7 +28,6 @@ export function ReaderPage() {
   } = useReaderDocument();
   const { voices } = useTtsVoices();
   const { fullscreen, toggleFullscreen } = useFullscreen();
-  const { headerVisible } = useAutoHideHeader(editing);
 
   const blocks = useMemo(
     () =>
@@ -79,7 +77,6 @@ export function ReaderPage() {
         languages={languages}
         saveState={saveState}
         editing={editing}
-        visible={headerVisible}
         fullscreen={fullscreen}
         onTitleChange={(title) => setDoc({ ...doc, title })}
         onToggleEditing={() => setEditing(!editing)}
@@ -96,7 +93,6 @@ export function ReaderPage() {
           fontSize={settings.fontSize}
           lineHeight={settings.lineHeight}
           letterSpacing={settings.letterSpacing}
-          contentMaxWidth={settings.contentMaxWidth}
           guidedFocus={settings.guidedFocus}
           guidedFocusOpacity={settings.guidedFocusOpacity}
           onContentChange={(content) => setDoc({ ...doc, content })}
@@ -118,7 +114,6 @@ export function ReaderPage() {
               fontSize={settings.fontSize}
               lineHeight={settings.lineHeight}
               letterSpacing={settings.letterSpacing}
-              contentMaxWidth={settings.contentMaxWidth}
               guidedFocus={settings.guidedFocus}
               guidedFocusOpacity={settings.guidedFocusOpacity}
               wpm={settings.wpm}

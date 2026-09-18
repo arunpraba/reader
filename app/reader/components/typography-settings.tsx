@@ -4,7 +4,6 @@ export function TypographySettings({
   fontSize,
   lineHeight,
   letterSpacing,
-  contentMaxWidth,
   guidedFocus,
   guidedFocusOpacity,
   onTypographyChange,
@@ -12,7 +11,6 @@ export function TypographySettings({
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
-  contentMaxWidth: number;
   guidedFocus: boolean;
   guidedFocusOpacity: number;
   onTypographyChange: (
@@ -20,7 +18,6 @@ export function TypographySettings({
       fontSize: number;
       lineHeight: number;
       letterSpacing: number;
-      contentMaxWidth: number;
       guidedFocus: boolean;
       guidedFocusOpacity: number;
     }>,
@@ -55,15 +52,6 @@ export function TypographySettings({
         max={0.2}
         step={0.01}
         suffix="em"
-      />
-      <CounterRow
-        label="Max width"
-        value={contentMaxWidth}
-        setValue={(next) => onTypographyChange({ contentMaxWidth: next })}
-        min={480}
-        max={1200}
-        step={20}
-        suffix="px"
       />
       <div className="skip-parens-row">
         <button

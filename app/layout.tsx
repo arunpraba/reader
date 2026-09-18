@@ -76,7 +76,7 @@ export default function RootLayout({
         <link rel="stylesheet" href={`${basePath}/reader-highlights.css`} />
       </head>
       <body
-        className={`${dmSans.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${dmSans.variable} ${geistSans.variable} ${geistMono.variable}`}
       >
         <Providers>{children}</Providers>
       </body>

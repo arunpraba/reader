@@ -19,7 +19,6 @@ export function ReaderSettingsPanel({
   fontSize,
   lineHeight,
   letterSpacing,
-  contentMaxWidth,
   guidedFocus,
   guidedFocusOpacity,
   wpm,
@@ -62,7 +61,6 @@ export function ReaderSettingsPanel({
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
-  contentMaxWidth: number;
   guidedFocus: boolean;
   guidedFocusOpacity: number;
   wpm: number;
@@ -85,7 +83,6 @@ export function ReaderSettingsPanel({
       fontSize: number;
       lineHeight: number;
       letterSpacing: number;
-      contentMaxWidth: number;
       guidedFocus: boolean;
       guidedFocusOpacity: number;
     }>,
@@ -130,7 +127,6 @@ export function ReaderSettingsPanel({
         fontSize={fontSize}
         lineHeight={lineHeight}
         letterSpacing={letterSpacing}
-        contentMaxWidth={contentMaxWidth}
         guidedFocus={guidedFocus}
         guidedFocusOpacity={guidedFocusOpacity}
         onTypographyChange={onTypographyChange}

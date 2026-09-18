@@ -9,7 +9,6 @@ export function ReaderTopbar({
   languages,
   saveState,
   editing,
-  visible,
   fullscreen,
   onTitleChange,
   onToggleEditing,
@@ -21,7 +20,6 @@ export function ReaderTopbar({
   languages: string[];
   saveState: "saved" | "saving";
   editing: boolean;
-  visible: boolean;
   fullscreen: boolean;
   onTitleChange: (title: string) => void;
   onToggleEditing: () => void;
@@ -29,9 +27,7 @@ export function ReaderTopbar({
   onToggleFullscreen: () => void;
 }) {
   return (
-    <header
-      className={`reader-topbar${visible ? "" : " reader-topbar-hidden"}`}
-    >
+    <header className="reader-topbar">
       <nav className="reader-breadcrumb" aria-label="Breadcrumb">
         <Link href="/" onClick={() => saveSelectedFolder("all")}>
           All files
