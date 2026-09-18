@@ -2227,7 +2227,7 @@ html.is-fullscreen .reader-shell {
   border-radius: 8px;
   min-height: calc(100dvh - 120px);
   padding: 48px 56px;
-  max-width: 860px;
+  max-width: min(100%, var(--reader-content-max-width, 860px));
   width: 100%;
   margin: 0 auto;
   box-shadow: none;
@@ -2272,6 +2272,9 @@ html.is-fullscreen .reader-shell {
   -webkit-font-smoothing: antialiased;
   font-optical-sizing: auto;
   font-kerning: normal;
+}
+.reader-paper .markdown-doc .guided-rest {
+  opacity: var(--reader-guided-rest-opacity, 0.4);
 }
 .reader-paper .notion-editor {
   -webkit-text-size-adjust: 100%;

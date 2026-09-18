@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  isAutoScrolling,
+  runAutoScroll,
+} from "@/lib/programmatic-scroll";
 
 const IDLE_MS = 3000;
-const PROGRAMMATIC_SCROLL_MS = 1000;
 
 const SCROLL_KEYS = new Set([
   "ArrowUp",
@@ -26,17 +29,10 @@ function isControlsTarget(target: EventTarget | null) {
   return target instanceof Element && !!target.closest(".reader-controls");
 }
 
-export function useAutoScrollFollow(
-  playing: boolean,
-  onResume: () => void,
-) {
+export function useAutoScrollFollow(playing: boolean, onResume: () => void) {
   const [userPaused, setUserPaused] = useState(false);
   const followScroll = playing && !userPaused;
-  const programmaticScrollRef = useRef(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const programmaticTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
   const onResumeRef = useRef(onResume);
 
   useEffect(() => {
@@ -61,15 +57,7 @@ export function useAutoScrollFollow(
   }, [clearIdleTimer, playing]);
 
   const runProgrammaticScroll = useCallback((fn: () => void) => {
-    programmaticScrollRef.current = true;
-    if (programmaticTimerRef.current) {
-      clearTimeout(programmaticTimerRef.current);
-    }
-    fn();
-    programmaticTimerRef.current = setTimeout(() => {
-      programmaticScrollRef.current = false;
-      programmaticTimerRef.current = null;
-    }, PROGRAMMATIC_SCROLL_MS);
+    runAutoScroll(fn);
   }, []);
 
   useEffect(() => {
@@ -85,7 +73,7 @@ export function useAutoScrollFollow(
     };
 
     const onScroll = () => {
-      if (programmaticScrollRef.current) return;
+      if (isAutoScrolling()) return;
       pause();
     };
 
@@ -109,15 +97,7 @@ export function useAutoScrollFollow(
     };
   }, [pause, playing, clearIdleTimer]);
 
-  useEffect(
-    () => () => {
-      clearIdleTimer();
-      if (programmaticTimerRef.current) {
-        clearTimeout(programmaticTimerRef.current);
-      }
-    },
-    [clearIdleTimer],
-  );
+  useEffect(() => () => clearIdleTimer(), [clearIdleTimer]);
 
   return { followScroll, runProgrammaticScroll };
 }

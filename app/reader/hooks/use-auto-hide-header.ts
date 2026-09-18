@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isAutoScrolling } from "@/lib/programmatic-scroll";
 
 const HIDE_AFTER_MS = 5000;
 const TOP_REVEAL_PX = 64;
@@ -89,18 +90,24 @@ export function useAutoHideHeader(pauseHide: boolean) {
       showHeader();
     };
 
+    const onScroll = () => {
+      // Controlled by auto-scroll tracker — ignore playback follow scrolls.
+      if (isAutoScrolling()) return;
+      showHeader();
+    };
+
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerdown", onActivity, { passive: true });
     window.addEventListener("wheel", onActivity, { passive: true });
     window.addEventListener("keydown", onActivity);
-    window.addEventListener("scroll", onActivity, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerdown", onActivity);
       window.removeEventListener("wheel", onActivity);
       window.removeEventListener("keydown", onActivity);
-      window.removeEventListener("scroll", onActivity);
+      window.removeEventListener("scroll", onScroll);
     };
   }, [showHeader, scheduleHide, clearHideTimer]);
 

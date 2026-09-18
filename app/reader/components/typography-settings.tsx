@@ -4,16 +4,25 @@ export function TypographySettings({
   fontSize,
   lineHeight,
   letterSpacing,
+  contentMaxWidth,
+  guidedFocus,
+  guidedFocusOpacity,
   onTypographyChange,
 }: {
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
+  contentMaxWidth: number;
+  guidedFocus: boolean;
+  guidedFocusOpacity: number;
   onTypographyChange: (
     next: Partial<{
       fontSize: number;
       lineHeight: number;
       letterSpacing: number;
+      contentMaxWidth: number;
+      guidedFocus: boolean;
+      guidedFocusOpacity: number;
     }>,
   ) => void;
 }) {
@@ -46,6 +55,35 @@ export function TypographySettings({
         max={0.2}
         step={0.01}
         suffix="em"
+      />
+      <CounterRow
+        label="Max width"
+        value={contentMaxWidth}
+        setValue={(next) => onTypographyChange({ contentMaxWidth: next })}
+        min={480}
+        max={1200}
+        step={20}
+        suffix="px"
+      />
+      <div className="skip-parens-row">
+        <button
+          type="button"
+          className={`switch compact ${guidedFocus ? "on" : ""}`}
+          onClick={() => onTypographyChange({ guidedFocus: !guidedFocus })}
+          aria-label="Guided focus"
+          aria-pressed={guidedFocus}
+        >
+          <span />
+        </button>
+        <span>Guided focus</span>
+      </div>
+      <CounterRow
+        label="Rest opacity"
+        value={guidedFocusOpacity}
+        setValue={(next) => onTypographyChange({ guidedFocusOpacity: next })}
+        min={0.1}
+        max={1}
+        step={0.05}
       />
     </div>
   );

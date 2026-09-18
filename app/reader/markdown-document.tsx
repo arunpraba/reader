@@ -15,6 +15,7 @@ import remarkMath from "remark-math";
 import { readPositionFromPoint } from "@/lib/read-position";
 import { markdownComponents } from "./markdown-components";
 import { rehypeReadingBlocks } from "@/lib/rehype-reading-blocks";
+import { rehypeGuidedFocus } from "@/lib/rehype-guided-focus";
 import { rehypeHeadingIds } from "@/lib/table-of-contents";
 
 const remarkPlugins = [remarkGfm, remarkMath];
@@ -22,10 +23,12 @@ const remarkPlugins = [remarkGfm, remarkMath];
 export const MarkdownDocument = memo(function MarkdownDocument({
   content,
   headingIds,
+  guidedFocus,
   onStartAt,
 }: {
   content: string;
   headingIds: string[];
+  guidedFocus: boolean;
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
   const rehypePlugins = useMemo(
@@ -33,8 +36,9 @@ export const MarkdownDocument = memo(function MarkdownDocument({
       rehypeKatex,
       rehypeReadingBlocks,
       () => rehypeHeadingIds(headingIds),
+      ...(guidedFocus ? [rehypeGuidedFocus] : []),
     ],
-    [headingIds],
+    [headingIds, guidedFocus],
   );
   const lastTapRef = useRef({ time: 0, x: 0, y: 0 });
   const lastStartRef = useRef(0);

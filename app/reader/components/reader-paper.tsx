@@ -11,6 +11,9 @@ export function ReaderPaper({
   fontSize,
   lineHeight,
   letterSpacing,
+  contentMaxWidth,
+  guidedFocus,
+  guidedFocusOpacity,
   onContentChange,
   onStartAt,
 }: {
@@ -24,6 +27,9 @@ export function ReaderPaper({
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
+  contentMaxWidth: number;
+  guidedFocus: boolean;
+  guidedFocusOpacity: number;
   onContentChange: (content: string) => void;
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
@@ -45,6 +51,8 @@ export function ReaderPaper({
           "--reader-font-size": `${fontSize}rem`,
           "--reader-line-height": String(lineHeight),
           "--reader-letter-spacing": `${letterSpacing}em`,
+          "--reader-content-max-width": `${contentMaxWidth}px`,
+          "--reader-guided-rest-opacity": String(guidedFocusOpacity),
         } as CSSProperties
       }
     >
@@ -92,6 +100,7 @@ export function ReaderPaper({
           <MarkdownDocument
             content={content}
             headingIds={toc.map((item) => item.id)}
+            guidedFocus={guidedFocus}
             onStartAt={onStartAt}
           />
         </>

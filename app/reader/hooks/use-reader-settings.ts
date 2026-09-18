@@ -50,8 +50,17 @@ export function useReaderSettings() {
   const [letterSpacing, setLetterSpacing] = useState(
     defaultReaderSettings.letterSpacing,
   );
+  const [contentMaxWidth, setContentMaxWidth] = useState(
+    defaultReaderSettings.contentMaxWidth,
+  );
   const [skipParentheticals, setSkipParentheticals] = useState(
     defaultReaderSettings.skipParentheticals,
+  );
+  const [guidedFocus, setGuidedFocus] = useState(
+    defaultReaderSettings.guidedFocus,
+  );
+  const [guidedFocusOpacity, setGuidedFocusOpacity] = useState(
+    defaultReaderSettings.guidedFocusOpacity,
   );
   const [settingsReady, setSettingsReady] = useState(false);
 
@@ -71,7 +80,10 @@ export function useReaderSettings() {
     setFontSize(saved.fontSize);
     setLineHeight(saved.lineHeight);
     setLetterSpacing(saved.letterSpacing);
+    setContentMaxWidth(saved.contentMaxWidth);
     setSkipParentheticals(saved.skipParentheticals);
+    setGuidedFocus(saved.guidedFocus);
+    setGuidedFocusOpacity(saved.guidedFocusOpacity);
     setSettingsOpen(saved.settingsOpen);
     setMinimized(saved.playerMinimized);
     setSettingsReady(true);
@@ -94,7 +106,10 @@ export function useReaderSettings() {
       fontSize,
       lineHeight,
       letterSpacing,
+      contentMaxWidth,
       skipParentheticals,
+      guidedFocus,
+      guidedFocusOpacity,
       settingsOpen,
       playerMinimized: minimized,
     };
@@ -115,7 +130,10 @@ export function useReaderSettings() {
     fontSize,
     lineHeight,
     letterSpacing,
+    contentMaxWidth,
     skipParentheticals,
+    guidedFocus,
+    guidedFocusOpacity,
     settingsOpen,
     minimized,
   ]);
@@ -138,12 +156,20 @@ export function useReaderSettings() {
         fontSize: number;
         lineHeight: number;
         letterSpacing: number;
+        contentMaxWidth: number;
+        guidedFocus: boolean;
+        guidedFocusOpacity: number;
       }>,
     ) => {
       if (next.fontSize !== undefined) setFontSize(next.fontSize);
       if (next.lineHeight !== undefined) setLineHeight(next.lineHeight);
       if (next.letterSpacing !== undefined)
         setLetterSpacing(next.letterSpacing);
+      if (next.contentMaxWidth !== undefined)
+        setContentMaxWidth(next.contentMaxWidth);
+      if (next.guidedFocus !== undefined) setGuidedFocus(next.guidedFocus);
+      if (next.guidedFocusOpacity !== undefined)
+        setGuidedFocusOpacity(next.guidedFocusOpacity);
     },
     [],
   );
@@ -178,6 +204,9 @@ export function useReaderSettings() {
     fontSize,
     lineHeight,
     letterSpacing,
+    contentMaxWidth,
+    guidedFocus,
+    guidedFocusOpacity,
     skipParentheticals,
     setSkipParentheticals,
     setPlayerMinimized,

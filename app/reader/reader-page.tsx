@@ -96,6 +96,9 @@ export function ReaderPage() {
           fontSize={settings.fontSize}
           lineHeight={settings.lineHeight}
           letterSpacing={settings.letterSpacing}
+          contentMaxWidth={settings.contentMaxWidth}
+          guidedFocus={settings.guidedFocus}
+          guidedFocusOpacity={settings.guidedFocusOpacity}
           onContentChange={(content) => setDoc({ ...doc, content })}
           onStartAt={playback.startAt}
         />
@@ -115,6 +118,9 @@ export function ReaderPage() {
               fontSize={settings.fontSize}
               lineHeight={settings.lineHeight}
               letterSpacing={settings.letterSpacing}
+              contentMaxWidth={settings.contentMaxWidth}
+              guidedFocus={settings.guidedFocus}
+              guidedFocusOpacity={settings.guidedFocusOpacity}
               wpm={settings.wpm}
               wordGap={settings.wordGap}
               sentenceGap={settings.sentenceGap}

@@ -24,6 +24,9 @@ export type ReaderSettings = {
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
+  contentMaxWidth: number;
+  guidedFocus: boolean;
+  guidedFocusOpacity: number;
   settingsOpen: boolean;
   playerMinimized: boolean;
 };
@@ -48,9 +51,18 @@ export const defaultReaderSettings: ReaderSettings = {
   fontSize: 1,
   lineHeight: 1.5,
   letterSpacing: 0,
+  contentMaxWidth: 860,
+  guidedFocus: false,
+  guidedFocusOpacity: 0.4,
   settingsOpen: false,
   playerMinimized: false,
 };
+
+function normalizeGuidedFocusOpacity(value: unknown) {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return defaultReaderSettings.guidedFocusOpacity;
+  return Math.min(1, Math.max(0.1, Math.round(n * 20) / 20));
+}
 
 const SETTINGS_KEY = "margin-reader-settings";
 const SELECTED_FOLDER_KEY = "margin-selected-folder";
@@ -89,6 +101,8 @@ function readLegacySettings(): Partial<ReaderSettings> {
         next.lineHeight = parsed.lineHeight;
       if (typeof parsed.letterSpacing === "number")
         next.letterSpacing = parsed.letterSpacing;
+      if (typeof parsed.contentMaxWidth === "number")
+        next.contentMaxWidth = parsed.contentMaxWidth;
     }
   } catch {}
 
@@ -134,6 +148,18 @@ export function loadReaderSettings(): ReaderSettings {
         typeof merged.letterSpacing === "number"
           ? merged.letterSpacing
           : defaultReaderSettings.letterSpacing,
+      contentMaxWidth:
+        typeof merged.contentMaxWidth === "number" &&
+        Number.isFinite(merged.contentMaxWidth)
+          ? Math.min(1200, Math.max(480, Math.round(merged.contentMaxWidth)))
+          : defaultReaderSettings.contentMaxWidth,
+      guidedFocus:
+        typeof merged.guidedFocus === "boolean"
+          ? merged.guidedFocus
+          : defaultReaderSettings.guidedFocus,
+      guidedFocusOpacity: normalizeGuidedFocusOpacity(
+        merged.guidedFocusOpacity,
+      ),
       preferredVoice:
         typeof merged.preferredVoice === "string"
           ? merged.preferredVoice
@@ -169,6 +195,7 @@ export function saveReaderSettings(settings: ReaderSettings) {
       fontSize: settings.fontSize,
       lineHeight: settings.lineHeight,
       letterSpacing: settings.letterSpacing,
+      contentMaxWidth: settings.contentMaxWidth,
     }),
   );
 }
