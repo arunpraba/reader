@@ -2253,10 +2253,16 @@ html.is-fullscreen .reader-shell {
   font-size: var(--reader-font-size, 1rem);
   line-height: var(--reader-line-height, 1.5);
   letter-spacing: var(--reader-letter-spacing, 0em);
+  font-weight: 400;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   font-optical-sizing: auto;
   font-kerning: normal;
+}
+.reader-paper .markdown-doc .guided-fix,
+.reader-paper .markdown-doc .guided-end,
+.reader-paper .markdown-doc .guided-rest {
+  font-weight: inherit;
 }
 .reader-paper .markdown-doc .guided-rest {
   opacity: var(--reader-guided-rest-opacity, 0.4);
@@ -2264,40 +2270,22 @@ html.is-fullscreen .reader-shell {
 .reader-paper .notion-editor {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  font-weight: 400;
   font-optical-sizing: auto;
 }
-/* Android phones: thicker glyphs + soft fringe survive Miracast/Chromecast upscale. */
+/* Touch devices: slightly more letter-spacing for cast/upscale; keep normal weight. */
 @media (hover: none) and (pointer: coarse) {
   .reader-paper .markdown-doc.markdown-body {
-    /* geometricPrecision beats optimizeLegibility on Blink/Android when scaled. */
     text-rendering: geometricPrecision;
-    font-weight: 450;
     letter-spacing: calc(var(--reader-letter-spacing, 0em) + 0.012em);
-    text-shadow:
-      0 0 0.35px color-mix(in oklab, currentColor 55%, transparent),
-      0 0 1.1px color-mix(in oklab, currentColor 22%, transparent);
   }
   .reader-paper .markdown-doc.markdown-body :is(pre, code, tt, kbd, samp) {
-    text-shadow: none;
     text-rendering: auto;
-    font-weight: 400;
     letter-spacing: normal;
-  }
-  .reader-paper
-    .markdown-doc.markdown-body
-    :is(h1, h2, h3, h4, h5, h6, strong, b) {
-    /* Keep display weights; only soften edges for cast. */
-    text-shadow:
-      0 0 0.35px color-mix(in oklab, currentColor 55%, transparent),
-      0 0 1.1px color-mix(in oklab, currentColor 22%, transparent);
   }
   .reader-paper .notion-editor {
     text-rendering: geometricPrecision;
-    font-weight: 450;
     letter-spacing: calc(var(--reader-letter-spacing, 0em) + 0.012em);
-    text-shadow:
-      0 0 0.35px color-mix(in oklab, currentColor 55%, transparent),
-      0 0 1.1px color-mix(in oklab, currentColor 22%, transparent);
   }
 }
 .markdown-doc.markdown-body ul {
@@ -2539,6 +2527,10 @@ html.is-fullscreen .reader-shell {
 .playback .main-play {
   width: 52px;
   height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent);
   color: white;
@@ -2547,6 +2539,8 @@ html.is-fullscreen .reader-shell {
   display: inline-grid;
   place-items: center;
   padding: 0;
+  box-sizing: border-box;
+  position: relative;
 }
 .progress-row {
   display: grid;
