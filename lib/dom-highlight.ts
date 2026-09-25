@@ -72,11 +72,14 @@ export function applyReadingHighlights({
   active,
   words,
   levels,
+  blockWords: blockWordsOption,
 }: {
   root: HTMLElement;
   active: Word;
   words: Word[];
   levels: HighlightLevels;
+  /** Pre-indexed block words — avoids O(n) filter on every TTS tick for large docs. */
+  blockWords?: Word[];
 }): ApplyReadingHighlightsResult | null {
   const element = root.querySelector<HTMLElement>(
     `[data-read-block='${active.blockIndex}']`,
@@ -103,9 +106,9 @@ export function applyReadingHighlights({
     }
   }
 
-  const blockWords = words.filter(
-    (word) => word.blockIndex === active.blockIndex,
-  );
+  const blockWords =
+    blockWordsOption ??
+    words.filter((word) => word.blockIndex === active.blockIndex);
   const activeOrdinal = blockWords.findIndex(
     (word) =>
       word.sentenceIndex === active.sentenceIndex &&

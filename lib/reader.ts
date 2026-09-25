@@ -188,35 +188,6 @@ export function flattenWords(blocks: Block[]): Word[] {
   return words;
 }
 
-export function estimateSeconds(
-  words: Word[],
-  wpm: number,
-  wordGap: number,
-  sentenceGap: number,
-  paragraphGap: number,
-  wordRepeats: number,
-  sentenceRepeats: number,
-  paragraphRepeats: number,
-) {
-  const multiplier = wordRepeats * sentenceRepeats * paragraphRepeats;
-  const speech = (words.length / wpm) * 60 * multiplier;
-  const wordPauseCount =
-    words.length * (wordRepeats - 1) +
-    words.filter((word) => !word.sentenceEnd).length;
-  const sentenceCount = words.filter((word) => word.sentenceEnd).length;
-  const sentencePauseCount =
-    sentenceCount * (sentenceRepeats - 1) +
-    words.filter((word) => word.sentenceEnd && !word.paragraphEnd).length;
-  const wordPauses =
-    wordPauseCount * wordGap * sentenceRepeats * paragraphRepeats;
-  const sentencePauses = sentencePauseCount * sentenceGap * paragraphRepeats;
-  const paragraphPauses =
-    words.filter((word) => word.paragraphEnd).length *
-    paragraphGap *
-    paragraphRepeats;
-  return speech + wordPauses + sentencePauses + paragraphPauses;
-}
-
 export function formatDuration(seconds: number) {
   if (!Number.isFinite(seconds)) return "—";
   const rounded = Math.max(1, Math.round(seconds));

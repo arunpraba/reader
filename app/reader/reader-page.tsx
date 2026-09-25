@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { estimateSeconds, flattenWords, parseMarkdown } from "@/lib/reader";
+import {
+  LARGE_DOC_WORD_THRESHOLD,
+  estimateSeconds,
+  wordPauseStats,
+  wordsByBlockIndex,
+} from "@/lib/word-index";
+import { flattenWords, parseMarkdown } from "@/lib/reader";
 import { ReaderControls } from "./components/reader-controls";
 import { ReaderLoading } from "./components/reader-loading";
 import { ReaderPaper } from "./components/reader-paper";
@@ -37,19 +43,40 @@ export function ReaderPage() {
     [doc?.content, settings.skipParentheticals],
   );
   const words = useMemo(() => flattenWords(blocks), [blocks]);
+  const pauseStats = useMemo(() => wordPauseStats(words), [words]);
+  const wordsByBlock = useMemo(() => wordsByBlockIndex(words), [words]);
+  const largeDoc = words.length >= LARGE_DOC_WORD_THRESHOLD;
   const languages = useMemo(
     () => [...new Set(words.map((word) => word.language))],
     [words],
   );
-  const estimate = estimateSeconds(
-    words,
-    settings.wpm,
-    settings.pauseEnabled.word ? settings.wordGap : 0,
-    settings.pauseEnabled.sentence ? settings.sentenceGap : 0,
-    settings.pauseEnabled.paragraph ? settings.paragraphGap : 0,
-    settings.wordRepeats,
-    settings.sentenceRepeats,
-    settings.paragraphRepeats,
+  const estimate = useMemo(
+    () =>
+      estimateSeconds(
+        words,
+        settings.wpm,
+        settings.pauseEnabled.word ? settings.wordGap : 0,
+        settings.pauseEnabled.sentence ? settings.sentenceGap : 0,
+        settings.pauseEnabled.paragraph ? settings.paragraphGap : 0,
+        settings.wordRepeats,
+        settings.sentenceRepeats,
+        settings.paragraphRepeats,
+        pauseStats,
+      ),
+    [
+      words,
+      pauseStats,
+      settings.wpm,
+      settings.pauseEnabled.word,
+      settings.pauseEnabled.sentence,
+      settings.pauseEnabled.paragraph,
+      settings.wordGap,
+      settings.sentenceGap,
+      settings.paragraphGap,
+      settings.wordRepeats,
+      settings.sentenceRepeats,
+      settings.paragraphRepeats,
+    ],
   );
 
   const playback = useReaderPlayback({
@@ -65,6 +92,7 @@ export function ReaderPage() {
     levels: settings.levels,
     playing: playback.playing,
     words,
+    wordsByBlock,
   });
 
   if (!doc) return <ReaderLoading />;
@@ -95,6 +123,7 @@ export function ReaderPage() {
           letterSpacing={settings.letterSpacing}
           guidedFocus={settings.guidedFocus}
           guidedFocusOpacity={settings.guidedFocusOpacity}
+          virtualize={largeDoc}
           onContentChange={(content) => setDoc({ ...doc, content })}
           onStartAt={playback.startAt}
         />

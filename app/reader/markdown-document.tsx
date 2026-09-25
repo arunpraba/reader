@@ -24,11 +24,13 @@ export const MarkdownDocument = memo(function MarkdownDocument({
   content,
   headingIds,
   guidedFocus,
+  virtualize = false,
   onStartAt,
 }: {
   content: string;
   headingIds: string[];
   guidedFocus: boolean;
+  virtualize?: boolean;
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
   const rehypePlugins = useMemo(
@@ -88,7 +90,7 @@ export const MarkdownDocument = memo(function MarkdownDocument({
 
   return (
     <div
-      className="markdown-doc markdown-body"
+      className={`markdown-doc markdown-body${virtualize ? " markdown-doc--virtualized" : ""}`}
       onDoubleClick={handleDoubleClick}
       onPointerUp={handlePointerUp}
       title="Double-click text to read from that position"

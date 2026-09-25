@@ -2249,6 +2249,11 @@ html.is-fullscreen .reader-shell {
   background-color: transparent;
   touch-action: manipulation;
 }
+/* Browser skips painting/layout for offscreen reading blocks on huge docs. */
+.markdown-doc--virtualized [data-read-block] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4.5rem;
+}
 .reader-paper .markdown-doc.markdown-body {
   font-size: var(--reader-font-size, 1rem);
   line-height: var(--reader-line-height, 1.5);

@@ -13,6 +13,7 @@ export function ReaderPaper({
   letterSpacing,
   guidedFocus,
   guidedFocusOpacity,
+  virtualize = false,
   onContentChange,
   onStartAt,
 }: {
@@ -28,6 +29,8 @@ export function ReaderPaper({
   letterSpacing: number;
   guidedFocus: boolean;
   guidedFocusOpacity: number;
+  /** Skip offscreen block layout when the doc is very large. */
+  virtualize?: boolean;
   onContentChange: (content: string) => void;
   onStartAt: (blockIndex: number, wordOrdinal: number) => void;
 }) {
@@ -98,6 +101,7 @@ export function ReaderPaper({
             content={content}
             headingIds={toc.map((item) => item.id)}
             guidedFocus={guidedFocus}
+            virtualize={virtualize}
             onStartAt={onStartAt}
           />
         </>

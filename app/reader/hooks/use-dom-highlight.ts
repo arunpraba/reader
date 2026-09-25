@@ -13,11 +13,13 @@ export function useDomHighlight({
   levels,
   playing,
   words,
+  wordsByBlock,
 }: {
   active: Word | null;
   levels: HighlightLevels;
   playing: boolean;
   words: Word[];
+  wordsByBlock?: Map<number, Word[]>;
 }) {
   const lastScrollSentenceRef = useRef<{
     blockIndex: number;
@@ -36,7 +38,13 @@ export function useDomHighlight({
     clearDomHighlights(root);
     if (!active || !root) return;
 
-    const result = applyReadingHighlights({ root, active, words, levels });
+    const result = applyReadingHighlights({
+      root,
+      active,
+      words,
+      levels,
+      blockWords: wordsByBlock?.get(active.blockIndex),
+    });
     if (!result) return;
 
     const { sentenceRange, element } = result;
@@ -62,5 +70,13 @@ export function useDomHighlight({
     } else if (!playing) {
       lastScrollSentenceRef.current = null;
     }
-  }, [active, followScroll, levels, playing, runProgrammaticScroll, words]);
+  }, [
+    active,
+    followScroll,
+    levels,
+    playing,
+    runProgrammaticScroll,
+    words,
+    wordsByBlock,
+  ]);
 }
